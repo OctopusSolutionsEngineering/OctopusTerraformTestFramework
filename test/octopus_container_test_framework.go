@@ -50,10 +50,6 @@ func (g *TestLogConsumer) Accept(l testcontainers.Log) {
 type OctopusContainerTest struct {
 }
 
-func (o *OctopusContainerTest) getTerraformTestDirRelativePath() string {
-	return ""
-}
-
 func (o *OctopusContainerTest) enableContainerLogging(container testcontainers.Container, ctx context.Context) error {
 	// Display the container logs
 	err := container.StartLogProducer(ctx)
@@ -394,7 +390,7 @@ func (o *OctopusContainerTest) waitForSpace(t *testing.T, server string, spaceId
 
 // initialiseOctopus uses Terraform to populate the test Octopus instance, making sure to clean up
 // any files generated during previous Terraform executions to avoid conflicts and locking issues.
-func (o *OctopusContainerTest) initialiseOctopus(t *testing.T, container *OctopusContainer, terraformDir string, spaceName string, initialiseVars []string, populateVars []string) error {
+func (o *OctopusContainerTest) initialiseOctopus(t *testing.T, container *OctopusContainer, terraformBaseDir string, terraformModuleDir string, spaceName string, initialiseVars []string, populateVars []string) error {
 	path, err := os.Getwd()
 	if err != nil {
 		return err
@@ -403,8 +399,8 @@ func (o *OctopusContainerTest) initialiseOctopus(t *testing.T, container *Octopu
 
 	// This test creates a new space and then populates the space.
 	terraformProjectDirs := []string{}
-	terraformProjectDirs = append(terraformProjectDirs, filepath.Join(o.getTerraformTestDirRelativePath(), "terraform", "1-singlespace"))
-	terraformProjectDirs = append(terraformProjectDirs, terraformDir)
+	terraformProjectDirs = append(terraformProjectDirs, filepath.Join(terraformBaseDir, "1-singlespace"))
+	terraformProjectDirs = append(terraformProjectDirs, filepath.Join(terraformBaseDir, terraformModuleDir))
 
 	// First loop initialises the new space, second populates the space
 	spaceId := "Spaces-1"
@@ -469,15 +465,15 @@ func GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (str
 }
 
 // Act initialises Octopus and MSSQL
-func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, terraformDir string, populateVars []string) (string, error) {
+func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, terraformBaseDir string, terraformModuleDir string, populateVars []string) (string, error) {
 	t.Log("POPULATING TEST SPACE")
 
 	spaceName := strings.ReplaceAll(fmt.Sprint(uuid.New()), "-", "")[:20]
-	err := o.initialiseOctopus(t, container, terraformDir, spaceName, []string{}, populateVars)
+	err := o.initialiseOctopus(t, container, terraformBaseDir, terraformModuleDir, spaceName, []string{}, populateVars)
 
 	if err != nil {
 		return "", err
 	}
 
-	return GetOutputVariable(t, filepath.Join(o.getTerraformTestDirRelativePath(), "terraform", "1-singlespace"), "octopus_space_id")
+	return GetOutputVariable(t, filepath.Join(terraformBaseDir, "1-singlespace"), "octopus_space_id")
 }
