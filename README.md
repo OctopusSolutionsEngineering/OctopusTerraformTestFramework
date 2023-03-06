@@ -17,12 +17,23 @@ import (
 func TestCreateSpaceAndUseIt(t *testing.T) {
 	testFramework := test.OctopusContainerTest{}
     testFramework.ArrangeTest(t, func(t *testing.T, container *test.OctopusContainer, client *client.Client) error {
-        _, err := testFramework.Act(t, container, filepath.Join("terraform", "2-usenewspace"), []string{})
+        _, err := testFramework.Act(t, container, "terraform", "2-usenewspace", []string{})
         return err
     })
 	
 }
 ```
+
+You must have a directory called `1-singlespace` as a sibling to the directory called in the `Act` method. For example:
+
+```
+test
+  - terraform
+    - 1-singlespace
+    - 2-usenewspace
+```
+
+An example of this directory has been provided at [1-singlespace](terraform%2F1-singlespace).
 
 ## Environment variables
 
