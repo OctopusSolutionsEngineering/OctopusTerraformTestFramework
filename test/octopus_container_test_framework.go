@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	b64 "encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/OctopusDeploy/go-octopusdeploy/v2/pkg/client"
@@ -441,12 +442,15 @@ func (o *OctopusContainerTest) initialiseOctopus(t *testing.T, container *Octopu
 	return nil
 }
 
-// getOutputVariable reads a Terraform output variable
+// GetOutputVariable reads a Terraform output variable
 func GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (string, error) {
+	// Note that you "terraform output -raw" can still get a 0 exit code if there was an error:
+	// https://github.com/hashicorp/terraform/issues/32384
+	// So we must get the JSON.
 	cmnd := exec.Command(
 		"terraform",
 		"output",
-		"-raw",
+		"-json",
 		outputVar)
 	cmnd.Dir = terraformDir
 	out, err := cmnd.Output()
@@ -461,7 +465,20 @@ func GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (str
 		return "", err
 	}
 
-	return string(out), nil
+	data := map[string]any{}
+	err = json.Unmarshal(out, &data)
+
+	if err != nil {
+		return "", err
+	}
+
+	if outputVarDetails, ok := data[outputVar].(map[string]any); ok {
+		if outputVarDetails, ok := outputVarDetails["value"]; ok {
+			return outputVarDetails.(string), nil
+		}
+	}
+
+	return "", errors.New("failed to parse the json response")
 }
 
 // Act initialises Octopus and MSSQL
