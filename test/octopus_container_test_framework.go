@@ -365,7 +365,7 @@ func (o *OctopusContainerTest) waitForSpace(t *testing.T, server string, spaceId
 			return errors.New("non 2xx status code returned")
 		}
 		return nil
-	}, time.Minute)
+	}, 5*time.Minute)
 
 	if err != nil {
 		t.Log("Failed to contact Octopus API on " + server + "/api")
@@ -381,7 +381,7 @@ func (o *OctopusContainerTest) waitForSpace(t *testing.T, server string, spaceId
 			return errors.New("non 2xx status code returned")
 		}
 		return nil
-	}, time.Minute)
+	}, 5*time.Minute)
 
 	if err != nil {
 		t.Log("Failed to contact Octopus API on " + server + "/api/" + spaceId)
