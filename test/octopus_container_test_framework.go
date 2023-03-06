@@ -426,7 +426,7 @@ func (o *OctopusContainerTest) initialiseOctopus(t *testing.T, container *Octopu
 			vars = populateVars
 		}
 
-		o.waitForSpace(container.URI, spaceId)
+		o.waitForSpace(t, container.URI, spaceId)
 
 		err = o.terraformApply(t, terraformProjectDir, container.URI, spaceId, vars)
 
