@@ -389,9 +389,9 @@ func (o *OctopusContainerTest) waitForSpace(t *testing.T, server string, spaceId
 	}
 }
 
-// initialiseOctopus uses Terraform to populate the test Octopus instance, making sure to clean up
+// InitialiseOctopus uses Terraform to populate the test Octopus instance, making sure to clean up
 // any files generated during previous Terraform executions to avoid conflicts and locking issues.
-func (o *OctopusContainerTest) initialiseOctopus(t *testing.T, container *OctopusContainer, terraformInitModuleDir string, terraformModuleDir string, spaceName string, initialiseVars []string, populateVars []string) error {
+func (o *OctopusContainerTest) InitialiseOctopus(t *testing.T, container *OctopusContainer, terraformInitModuleDir string, terraformModuleDir string, spaceName string, initialiseVars []string, populateVars []string) error {
 	path, err := os.Getwd()
 	if err != nil {
 		return err
@@ -511,7 +511,7 @@ func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, te
 	t.Log("POPULATING TEST SPACE")
 
 	spaceName := strings.ReplaceAll(fmt.Sprint(uuid.New()), "-", "")[:20]
-	err := o.initialiseOctopus(t, container, filepath.Join(terraformBaseDir, "1-singlespace"), filepath.Join(terraformBaseDir, terraformModuleDir), spaceName, []string{}, populateVars)
+	err := o.InitialiseOctopus(t, container, filepath.Join(terraformBaseDir, "1-singlespace"), filepath.Join(terraformBaseDir, terraformModuleDir), spaceName, []string{}, populateVars)
 
 	if err != nil {
 		return "", err
@@ -525,7 +525,7 @@ func (o *OctopusContainerTest) ActWithCustomSpace(t *testing.T, container *Octop
 	t.Log("POPULATING TEST SPACE")
 
 	spaceName := strings.ReplaceAll(fmt.Sprint(uuid.New()), "-", "")[:20]
-	err := o.initialiseOctopus(t, container, initialiseModuleDir, terraformModuleDir, spaceName, initialiseVars, populateVars)
+	err := o.InitialiseOctopus(t, container, initialiseModuleDir, terraformModuleDir, spaceName, initialiseVars, populateVars)
 
 	if err != nil {
 		return "", err
