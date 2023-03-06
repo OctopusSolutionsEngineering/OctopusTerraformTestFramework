@@ -23,3 +23,9 @@ func TestCreateSpaceAndUseIt(t *testing.T) {
 	
 }
 ```
+
+## Environment variables
+
+* `OCTOTESTWAITFORAPI` - set to `false` to remove the check of the API between creating a space and populating it. The default is to run these checks.
+* `OCTOTESTVERSION` - set to the tag of the `octopusdeploy/octopusdeploy` Docker image to use in the tests. The default is `latest`.
+* `OCTOTESTRETRYCOUNT` - set to the number of retries to use for any individual test. Defaults to 3.
