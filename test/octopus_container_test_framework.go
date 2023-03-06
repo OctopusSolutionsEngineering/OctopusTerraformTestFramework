@@ -461,6 +461,7 @@ func GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (str
 		out, err := cmnd.Output()
 
 		if err != nil {
+			ShowState(t, terraformDir)
 			exitError, ok := err.(*exec.ExitError)
 			if ok {
 				t.Log(string(exitError.Stderr))
@@ -488,6 +489,34 @@ func GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (str
 	}
 
 	return data, nil
+}
+
+// ShowState reads the terraform state
+func ShowState(t *testing.T, terraformDir string) error {
+	cmnd := exec.Command(
+		"terraform",
+		"show",
+		"-json")
+	cmnd.Dir = terraformDir
+	out, err := cmnd.Output()
+
+	if err != nil {
+		exitError, ok := err.(*exec.ExitError)
+		if ok {
+			t.Log(string(exitError.Stderr))
+		} else {
+			t.Log(err)
+		}
+		return err
+	}
+
+	t.Log(string(out))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Act initialises Octopus and MSSQL
