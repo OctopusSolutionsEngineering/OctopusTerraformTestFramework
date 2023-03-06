@@ -432,10 +432,11 @@ func (o *OctopusContainerTest) InitialiseOctopus(t *testing.T, container *Octopu
 		}
 
 		// get the ID of any new space created, which will be used in the subsequent Terraform executions
-		spaceId, err = o.GetOutputVariable(t, terraformProjectDir, "octopus_space_id")
-
-		if err != nil {
-			return err
+		if i == 0 {
+			spaceId, err = o.GetOutputVariable(t, terraformProjectDir, "octopus_space_id")
+			if err != nil {
+				return err
+			}
 		}
 	}
 
