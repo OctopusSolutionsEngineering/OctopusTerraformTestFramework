@@ -432,7 +432,7 @@ func (o *OctopusContainerTest) initialiseOctopus(t *testing.T, container *Octopu
 		}
 
 		// get the ID of any new space created, which will be used in the subsequent Terraform executions
-		spaceId, err = GetOutputVariable(t, terraformProjectDir, "octopus_space_id")
+		spaceId, err = o.GetOutputVariable(t, terraformProjectDir, "octopus_space_id")
 
 		if err != nil {
 			return err
@@ -443,7 +443,7 @@ func (o *OctopusContainerTest) initialiseOctopus(t *testing.T, container *Octopu
 }
 
 // GetOutputVariable reads a Terraform output variable
-func GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (string, error) {
+func (o *OctopusContainerTest) GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (string, error) {
 	// Note that you "terraform output -raw" can still get a 0 exit code if there was an error:
 	// https://github.com/hashicorp/terraform/issues/32384
 	// So we must get the JSON.
@@ -456,7 +456,7 @@ func GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (str
 	out, err := cmnd.Output()
 
 	if err != nil {
-		ShowState(t, terraformDir)
+		o.ShowState(t, terraformDir)
 		exitError, ok := err.(*exec.ExitError)
 		if ok {
 			t.Log(string(exitError.Stderr))
@@ -477,7 +477,7 @@ func GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (str
 }
 
 // ShowState reads the terraform state
-func ShowState(t *testing.T, terraformDir string) error {
+func (o *OctopusContainerTest) ShowState(t *testing.T, terraformDir string) error {
 	cmnd := exec.Command(
 		"terraform",
 		"show",
@@ -515,5 +515,5 @@ func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, te
 		return "", err
 	}
 
-	return GetOutputVariable(t, filepath.Join(terraformBaseDir, "1-singlespace"), "octopus_space_id")
+	return o.GetOutputVariable(t, filepath.Join(terraformBaseDir, "1-singlespace"), "octopus_space_id")
 }
