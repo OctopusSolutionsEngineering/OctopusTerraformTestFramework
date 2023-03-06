@@ -465,20 +465,14 @@ func GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (str
 		return "", err
 	}
 
-	data := map[string]any{}
+	data := ""
 	err = json.Unmarshal(out, &data)
 
 	if err != nil {
 		return "", err
 	}
 
-	if outputVarDetails, ok := data[outputVar].(map[string]any); ok {
-		if outputVarDetails, ok := outputVarDetails["value"]; ok {
-			return outputVarDetails.(string), nil
-		}
-	}
-
-	return "", errors.New("failed to parse the json response")
+	return data, nil
 }
 
 // Act initialises Octopus and MSSQL
