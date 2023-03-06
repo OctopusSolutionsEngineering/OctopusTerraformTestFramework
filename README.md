@@ -24,7 +24,9 @@ func TestCreateSpaceAndUseIt(t *testing.T) {
 }
 ```
 
-You must have a directory called `1-singlespace` as a sibling to the directory called in the `Act` method. For example:
+You must have a directory called `1-singlespace` as a sibling to the directory called in the `Act` method. This directory
+must contain a Terraform module that creates a new Octopus space and returns the new space ID as teh output variable `octopus_space_id`.
+For example:
 
 ```
 test
