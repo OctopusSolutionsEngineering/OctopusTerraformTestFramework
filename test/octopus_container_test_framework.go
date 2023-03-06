@@ -456,7 +456,9 @@ func GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (str
 	out, err := cmnd.Output()
 
 	if err != nil {
-		ShowState(t, terraformDir)
+		if os.Getenv("OCTOTESTDUMPSTATE") == "true" {
+			ShowState(t, terraformDir)
+		}
 		exitError, ok := err.(*exec.ExitError)
 		if ok {
 			t.Log(string(exitError.Stderr))
