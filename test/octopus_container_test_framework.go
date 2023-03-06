@@ -444,29 +444,44 @@ func (o *OctopusContainerTest) initialiseOctopus(t *testing.T, container *Octopu
 
 // GetOutputVariable reads a Terraform output variable
 func GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (string, error) {
-	// Note that you "terraform output -raw" can still get a 0 exit code if there was an error:
-	// https://github.com/hashicorp/terraform/issues/32384
-	// So we must get the JSON.
-	cmnd := exec.Command(
-		"terraform",
-		"output",
-		"-json",
-		outputVar)
-	cmnd.Dir = terraformDir
-	out, err := cmnd.Output()
-
-	if err != nil {
-		exitError, ok := err.(*exec.ExitError)
-		if ok {
-			t.Log(string(exitError.Stderr))
-		} else {
-			t.Log(err)
-		}
-		return "", err
-	}
-
 	data := ""
-	err = json.Unmarshal(out, &data)
+
+	// We've seen random cases where attempting to access the output variables directly after an apply
+	// fails, so the retry attempts a few times just in case.
+	err := retry.Do(func() error {
+		// Note that you "terraform output -raw" can still get a 0 exit code if there was an error:
+		// https://github.com/hashicorp/terraform/issues/32384
+		// So we must get the JSON.
+		cmnd := exec.Command(
+			"terraform",
+			"output",
+			"-json",
+			outputVar)
+		cmnd.Dir = terraformDir
+		out, err := cmnd.Output()
+
+		if err != nil {
+			exitError, ok := err.(*exec.ExitError)
+			if ok {
+				t.Log(string(exitError.Stderr))
+			} else {
+				t.Log(err)
+			}
+			return err
+		}
+
+		tmpData := ""
+		err = json.Unmarshal(out, &tmpData)
+
+		if err != nil {
+			return err
+		}
+
+		data = tmpData
+		return nil
+	},
+		retry.Attempts(3),
+		retry.Delay(time.Second))
 
 	if err != nil {
 		return "", err
