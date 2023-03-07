@@ -41,4 +41,5 @@ An example of this directory has been provided at [1-singlespace](terraform%2F1-
 * `OCTOTESTVERSION` - set to the tag of the `octopusdeploy/octopusdeploy` Docker image to use in the tests. The default is `latest`.
 * `OCTOTESTRETRYCOUNT` - set to the number of retries to use for any individual test. Defaults to 3.
 * `OCTOTESTDUMPSTATE` - set to `true` to dump the Terraform state if a request for an output variable fails. Defaults to `false`.
+* `OCTOTESTDEFAULTSPACEID` - Terraform seems to have a bug where the state file is not written correctly. If this happens, the ID of the newly created space can not be read. Setting this env var allows you to recover from this error by setting the default value of the new space (usually `Spaces-2`).
 * `LICENSE` - Set to the base 64 encoded version of an Octopus XML license. See `Test Octopus License` under `Shared-Sales` in Lasptpass for a value.

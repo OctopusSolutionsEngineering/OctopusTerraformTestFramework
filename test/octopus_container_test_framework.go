@@ -435,7 +435,13 @@ func (o *OctopusContainerTest) initialiseOctopus(t *testing.T, container *Octopu
 		spaceId, err = o.GetOutputVariable(t, terraformProjectDir, "octopus_space_id")
 
 		if err != nil {
-			return err
+			// I've seen number of tests fail because the state file is blank and there is no output to read.
+			// We offer a workaround for this by setting the default space ID, which is usually Spaces-2
+			if os.Getenv("OCTOTESTDEFAULTSPACEID") != "" {
+				spaceId = os.Getenv("OCTOTESTDEFAULTSPACEID")
+			} else {
+				return err
+			}
 		}
 	}
 
