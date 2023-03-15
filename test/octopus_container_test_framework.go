@@ -531,6 +531,7 @@ func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, te
 		// We offer a workaround for this by setting the default space ID, which is usually Spaces-2
 		if os.Getenv("OCTOTESTDEFAULTSPACEID") != "" {
 			spaceId = os.Getenv("OCTOTESTDEFAULTSPACEID")
+			return spaceId, nil
 		} else {
 			return "", err
 		}
@@ -557,6 +558,7 @@ func (o *OctopusContainerTest) ActWithCustomSpace(t *testing.T, container *Octop
 		// We offer a workaround for this by setting the default space ID, which is usually Spaces-2
 		if os.Getenv("OCTOTESTDEFAULTSPACEID") != "" {
 			spaceId = os.Getenv("OCTOTESTDEFAULTSPACEID")
+			return spaceId, nil
 		} else {
 			return "", err
 		}
