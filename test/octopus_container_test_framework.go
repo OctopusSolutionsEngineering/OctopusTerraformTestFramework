@@ -539,7 +539,7 @@ func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, te
 	return spaceId, err
 }
 
-// Act initialises Octopus and MSSQL with a custom directory holding the module to create the initial space
+// ActWithCustomSpace initialises Octopus and MSSQL with a custom directory holding the module to create the initial space
 func (o *OctopusContainerTest) ActWithCustomSpace(t *testing.T, container *OctopusContainer, initialiseModuleDir string, terraformModuleDir string, initialiseVars []string, populateVars []string) (string, error) {
 	t.Log("POPULATING TEST SPACE")
 
