@@ -524,7 +524,19 @@ func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, te
 		return "", err
 	}
 
-	return o.GetOutputVariable(t, filepath.Join(terraformBaseDir, "1-singlespace"), "octopus_space_id")
+	spaceId, err := o.GetOutputVariable(t, filepath.Join(terraformBaseDir, "1-singlespace"), "octopus_space_id")
+
+	if err != nil {
+		// I've seen number of tests fail because the state file is blank and there is no output to read.
+		// We offer a workaround for this by setting the default space ID, which is usually Spaces-2
+		if os.Getenv("OCTOTESTDEFAULTSPACEID") != "" {
+			spaceId = os.Getenv("OCTOTESTDEFAULTSPACEID")
+		} else {
+			return "", err
+		}
+	}
+
+	return spaceId, err
 }
 
 // Act initialises Octopus and MSSQL with a custom directory holding the module to create the initial space
@@ -538,5 +550,17 @@ func (o *OctopusContainerTest) ActWithCustomSpace(t *testing.T, container *Octop
 		return "", err
 	}
 
-	return o.GetOutputVariable(t, initialiseModuleDir, "octopus_space_id")
+	spaceId, err := o.GetOutputVariable(t, initialiseModuleDir, "octopus_space_id")
+
+	if err != nil {
+		// I've seen number of tests fail because the state file is blank and there is no output to read.
+		// We offer a workaround for this by setting the default space ID, which is usually Spaces-2
+		if os.Getenv("OCTOTESTDEFAULTSPACEID") != "" {
+			spaceId = os.Getenv("OCTOTESTDEFAULTSPACEID")
+		} else {
+			return "", err
+		}
+	}
+
+	return spaceId, err
 }
