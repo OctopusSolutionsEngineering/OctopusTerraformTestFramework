@@ -316,8 +316,8 @@ func (o *OctopusContainerTest) terraformInit(t *testing.T, terraformProjectDir s
 	return nil
 }
 
-// terraformApply runs "terraform apply"
-func (o *OctopusContainerTest) terraformApply(t *testing.T, terraformProjectDir string, server string, spaceId string, vars []string) error {
+// TerraformApply runs "terraform apply"
+func (o *OctopusContainerTest) TerraformApply(t *testing.T, terraformProjectDir string, server string, spaceId string, vars []string) error {
 	newArgs := append([]string{
 		"apply",
 		"-auto-approve",
@@ -425,7 +425,7 @@ func (o *OctopusContainerTest) InitialiseOctopus(t *testing.T, container *Octopu
 
 		o.waitForSpace(t, container.URI, spaceId)
 
-		err = o.terraformApply(t, terraformProjectDir, container.URI, spaceId, vars)
+		err = o.TerraformApply(t, terraformProjectDir, container.URI, spaceId, vars)
 
 		if err != nil {
 			return err
