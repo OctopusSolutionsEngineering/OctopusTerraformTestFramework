@@ -293,8 +293,8 @@ func (o *OctopusContainerTest) cleanTerraformModule(terraformProjectDir string) 
 	return nil
 }
 
-// terraformInit runs "terraform init"
-func (o *OctopusContainerTest) terraformInit(t *testing.T, terraformProjectDir string) error {
+// TerraformInit runs "terraform init"
+func (o *OctopusContainerTest) TerraformInit(t *testing.T, terraformProjectDir string) error {
 	args := []string{"init", "-no-color"}
 	cmnd := exec.Command("terraform", args...)
 	cmnd.Dir = terraformProjectDir
@@ -409,7 +409,7 @@ func (o *OctopusContainerTest) InitialiseOctopus(t *testing.T, container *Octopu
 
 		o.cleanTerraformModule(terraformProjectDir)
 
-		err := o.terraformInit(t, terraformProjectDir)
+		err := o.TerraformInit(t, terraformProjectDir)
 
 		if err != nil {
 			return err
