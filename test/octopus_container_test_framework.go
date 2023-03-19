@@ -389,6 +389,19 @@ func (o *OctopusContainerTest) waitForSpace(t *testing.T, server string, spaceId
 	}
 }
 
+// TerraformInitAndApply calls terraform init and apply on the supplied directory.
+func (o *OctopusContainerTest) TerraformInitAndApply(t *testing.T, container *OctopusContainer, terraformProjectDir string, spaceId string, vars []string) error {
+	o.cleanTerraformModule(terraformProjectDir)
+
+	err := o.TerraformInit(t, terraformProjectDir)
+
+	if err != nil {
+		return err
+	}
+
+	return o.TerraformApply(t, terraformProjectDir, container.URI, spaceId, vars)
+}
+
 // InitialiseOctopus uses Terraform to populate the test Octopus instance, making sure to clean up
 // any files generated during previous Terraform executions to avoid conflicts and locking issues.
 func (o *OctopusContainerTest) InitialiseOctopus(t *testing.T, container *OctopusContainer, terraformInitModuleDir string, terraformModuleDir string, spaceName string, initialiseVars []string, populateVars []string) error {
