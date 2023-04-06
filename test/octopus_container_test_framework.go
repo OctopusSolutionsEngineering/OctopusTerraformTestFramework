@@ -393,10 +393,12 @@ func (o *OctopusContainerTest) waitForSpace(t *testing.T, server string, spaceId
 func (o *OctopusContainerTest) TerraformInitAndApply(t *testing.T, container *OctopusContainer, terraformProjectDir string, spaceId string, vars []string) error {
 	o.cleanTerraformModule(terraformProjectDir)
 
-	err := o.TerraformInit(t, terraformProjectDir)
+	if strings.ToLower(os.Getenv("OCTOTESTSKIPINIT")) != "true" {
+		err := o.TerraformInit(t, terraformProjectDir)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	return o.TerraformApply(t, terraformProjectDir, container.URI, spaceId, vars)
