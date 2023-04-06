@@ -422,10 +422,12 @@ func (o *OctopusContainerTest) InitialiseOctopus(t *testing.T, container *Octopu
 
 		o.cleanTerraformModule(terraformProjectDir)
 
-		err := o.TerraformInit(t, terraformProjectDir)
+		if strings.ToLower(os.Getenv("OCTOTESTSKIPINIT")) != "true" {
+			err := o.TerraformInit(t, terraformProjectDir)
 
-		if err != nil {
-			return err
+			if err != nil {
+				return err
+			}
 		}
 
 		// when initialising the new space, we need to define a new space name as a variable
