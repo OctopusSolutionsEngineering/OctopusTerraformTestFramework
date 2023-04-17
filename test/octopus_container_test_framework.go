@@ -13,6 +13,7 @@ import (
 	lintwait "github.com/mcasperson/OctopusTerraformTestFramework/wait"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 	"net/http"
 	"os"
 	"os/exec"
@@ -433,25 +434,27 @@ func (o *OctopusContainerTest) InitialiseOctopus(
 	t.Log("Working dir: " + path)
 
 	// This test creates a new space and then populates the space.
-	terraformProjectDirs := map[string]InitializationSettings{}
-	terraformProjectDirs[terraformInitModuleDir] = InitializationSettings{
+	terraformProjectDirs := orderedmap.New[string, InitializationSettings]()
+	terraformProjectDirs.Set(terraformInitModuleDir, InitializationSettings{
 		InputVars:        append(initialiseVars, "-var=octopus_space_name="+spaceName),
 		SpaceIdOutputVar: "octopus_space_id",
-	}
+	})
 	if prepopulateModuleDir != "" {
-		terraformProjectDirs[prepopulateModuleDir] = InitializationSettings{
+		terraformProjectDirs.Set(prepopulateModuleDir, InitializationSettings{
 			InputVars:        prepopulateVars,
 			SpaceIdOutputVar: "",
-		}
+		})
 	}
-	terraformProjectDirs[terraformModuleDir] = InitializationSettings{
+	terraformProjectDirs.Set(terraformModuleDir, InitializationSettings{
 		InputVars:        populateVars,
 		SpaceIdOutputVar: "",
-	}
+	})
 
 	// First loop initialises the new space, second populates the space
 	spaceId := "Spaces-1"
-	for terraformProjectDir, settings := range terraformProjectDirs {
+	for pair := terraformProjectDirs.Oldest(); pair != nil; pair = pair.Next() {
+		terraformProjectDir := pair.Key
+		settings := pair.Value
 
 		o.cleanTerraformModule(terraformProjectDir)
 
