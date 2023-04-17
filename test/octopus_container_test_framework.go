@@ -196,7 +196,9 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	}
 
 	// Display the container logs
-	o.enableContainerLogging(container, ctx)
+	if os.Getenv("OCTODISABLEOCTOCONTAINERLOGGING") != "true" {
+		o.enableContainerLogging(container, ctx)
+	}
 
 	ip, err := container.Host(ctx)
 	if err != nil {
