@@ -30,6 +30,11 @@ import (
 
 const ApiKey = "API-ABCDEFGHIJKLMNOPQURTUVWXYZ12345"
 
+type InitializationSettings struct {
+	InputVars        []string
+	SpaceIdOutputVar string
+}
+
 type OctopusContainer struct {
 	testcontainers.Container
 	URI string
@@ -414,6 +419,7 @@ func (o *OctopusContainerTest) InitialiseOctopus(
 	terraformModuleDir string,
 	spaceName string,
 	initialiseVars []string,
+	prepopulateVars []string,
 	populateVars []string) error {
 
 	path, err := os.Getwd()
@@ -423,16 +429,25 @@ func (o *OctopusContainerTest) InitialiseOctopus(
 	t.Log("Working dir: " + path)
 
 	// This test creates a new space and then populates the space.
-	terraformProjectDirs := []string{}
-	terraformProjectDirs = append(terraformProjectDirs, terraformInitModuleDir)
-	if prepopulateModuleDir != "" {
-		terraformProjectDirs = append(terraformProjectDirs, prepopulateModuleDir)
+	terraformProjectDirs := map[string]InitializationSettings{}
+	terraformProjectDirs[terraformInitModuleDir] = InitializationSettings{
+		InputVars:        append(initialiseVars, "-var=octopus_space_name="+spaceName),
+		SpaceIdOutputVar: "octopus_space_id",
 	}
-	terraformProjectDirs = append(terraformProjectDirs, terraformModuleDir)
+	if prepopulateModuleDir != "" {
+		terraformProjectDirs[prepopulateModuleDir] = InitializationSettings{
+			InputVars:        prepopulateVars,
+			SpaceIdOutputVar: "",
+		}
+	}
+	terraformProjectDirs[terraformModuleDir] = InitializationSettings{
+		InputVars:        populateVars,
+		SpaceIdOutputVar: "",
+	}
 
 	// First loop initialises the new space, second populates the space
 	spaceId := "Spaces-1"
-	for i, terraformProjectDir := range terraformProjectDirs {
+	for terraformProjectDir, settings := range terraformProjectDirs {
 
 		o.cleanTerraformModule(terraformProjectDir)
 
@@ -444,25 +459,17 @@ func (o *OctopusContainerTest) InitialiseOctopus(
 			}
 		}
 
-		// when initialising the new space, we need to define a new space name as a variable
-		vars := []string{}
-		if i == 0 {
-			vars = append(initialiseVars, "-var=octopus_space_name="+spaceName)
-		} else {
-			vars = populateVars
-		}
-
 		o.waitForSpace(t, container.URI, spaceId)
 
-		err = o.TerraformApply(t, terraformProjectDir, container.URI, spaceId, vars)
+		err = o.TerraformApply(t, terraformProjectDir, container.URI, spaceId, settings.InputVars)
 
 		if err != nil {
 			return err
 		}
 
 		// get the ID of any new space created, which will be used in the subsequent Terraform executions
-		if i == 0 {
-			spaceId, err = o.GetOutputVariable(t, terraformProjectDir, "octopus_space_id")
+		if settings.SpaceIdOutputVar != "" {
+			spaceId, err = o.GetOutputVariable(t, terraformProjectDir, settings.SpaceIdOutputVar)
 			if err != nil {
 				// I've seen number of tests fail because the state file is blank and there is no output to read.
 				// We offer a workaround for this by setting the default space ID, which is usually Spaces-2
@@ -547,7 +554,7 @@ func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, te
 	t.Log("POPULATING TEST SPACE")
 
 	spaceName := strings.ReplaceAll(fmt.Sprint(uuid.New()), "-", "")[:20]
-	err := o.InitialiseOctopus(t, container, filepath.Join(terraformBaseDir, "1-singlespace"), "", filepath.Join(terraformBaseDir, terraformModuleDir), spaceName, []string{}, populateVars)
+	err := o.InitialiseOctopus(t, container, filepath.Join(terraformBaseDir, "1-singlespace"), "", filepath.Join(terraformBaseDir, terraformModuleDir), spaceName, []string{}, []string{}, populateVars)
 
 	if err != nil {
 		return "", err
@@ -574,7 +581,7 @@ func (o *OctopusContainerTest) ActWithCustomSpace(t *testing.T, container *Octop
 	t.Log("POPULATING TEST SPACE")
 
 	spaceName := strings.ReplaceAll(fmt.Sprint(uuid.New()), "-", "")[:20]
-	err := o.InitialiseOctopus(t, container, initialiseModuleDir, "", terraformModuleDir, spaceName, initialiseVars, populateVars)
+	err := o.InitialiseOctopus(t, container, initialiseModuleDir, "", terraformModuleDir, spaceName, initialiseVars, []string{}, populateVars)
 
 	if err != nil {
 		return "", err
@@ -597,11 +604,11 @@ func (o *OctopusContainerTest) ActWithCustomSpace(t *testing.T, container *Octop
 }
 
 // ActWithCustomPrePopulatedSpace initialises Octopus and MSSQL with a custom directory holding the module to create the initial space and a module used to prepopulate the space
-func (o *OctopusContainerTest) ActWithCustomPrePopulatedSpace(t *testing.T, container *OctopusContainer, initialiseModuleDir string, prepopulateModuleDir string, terraformModuleDir string, initialiseVars []string, populateVars []string) (string, error) {
+func (o *OctopusContainerTest) ActWithCustomPrePopulatedSpace(t *testing.T, container *OctopusContainer, initialiseModuleDir string, prepopulateModuleDir string, terraformModuleDir string, initialiseVars []string, prePopulateVars []string, populateVars []string) (string, error) {
 	t.Log("POPULATING TEST SPACE")
 
 	spaceName := strings.ReplaceAll(fmt.Sprint(uuid.New()), "-", "")[:20]
-	err := o.InitialiseOctopus(t, container, initialiseModuleDir, prepopulateModuleDir, terraformModuleDir, spaceName, initialiseVars, populateVars)
+	err := o.InitialiseOctopus(t, container, initialiseModuleDir, prepopulateModuleDir, terraformModuleDir, spaceName, initialiseVars, prePopulateVars, populateVars)
 
 	if err != nil {
 		return "", err
