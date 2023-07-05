@@ -260,7 +260,12 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 				// This fixes the "can not get logs from container which is dead or marked for removal" error
 				// See https://github.com/testcontainers/testcontainers-go/issues/606
 				if os.Getenv("OCTODISABLEOCTOCONTAINERLOGGING") != "true" {
-					octopusContainer.StopLogProducer()
+					stopProducerErr := octopusContainer.StopLogProducer()
+
+					// try to continue on if there was an error stopping the producer
+					if stopProducerErr != nil {
+						t.Log(stopProducerErr)
+					}
 				}
 
 				octoTerminateErr := octopusContainer.Terminate(ctx)
