@@ -253,6 +253,8 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 				return err
 			}
 
+			t.Log("Octopus URI: " + octopusContainer.URI)
+
 			// Clean up the container after the test is complete
 			defer func() {
 				// This fixes the "can not get logs from container which is dead or marked for removal" error
