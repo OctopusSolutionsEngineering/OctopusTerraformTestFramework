@@ -11,6 +11,7 @@ import (
 	lintwait "github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/wait"
 	"github.com/avast/retry-go/v4"
 	"github.com/google/uuid"
+	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 	"net/http"
