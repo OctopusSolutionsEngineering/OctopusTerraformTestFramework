@@ -301,9 +301,35 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 
 // cleanTerraformModule removes state and lock files to ensure we get a clean run each time
 func (o *OctopusContainerTest) cleanTerraformModule(terraformProjectDir string) error {
-	os.Remove(filepath.Join(terraformProjectDir, ".terraform.lock.hcl"))
-	os.Remove(filepath.Join(terraformProjectDir, "terraform.tfstate"))
-	os.Remove(filepath.Join(terraformProjectDir, ".terraform.tfstate.lock.info"))
+	err := retry.Do(func() error {
+		err := o.deleteIfExists(filepath.Join(terraformProjectDir, ".terraform.lock.hcl"))
+		if err != nil {
+			return err
+		}
+
+		err = o.deleteIfExists(filepath.Join(terraformProjectDir, "terraform.tfstate"))
+		if err != nil {
+			return err
+		}
+
+		err = o.deleteIfExists(filepath.Join(terraformProjectDir, ".terraform.tfstate.lock.info"))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}, retry.Attempts(3))
+
+	return err
+}
+
+func (o *OctopusContainerTest) deleteIfExists(file string) error {
+	err := os.Remove(file)
+
+	if err != nil && os.IsNotExist(err) {
+		return nil
+	}
+
 	return nil
 }
 
