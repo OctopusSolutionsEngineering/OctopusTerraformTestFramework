@@ -246,14 +246,31 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 				return err
 			}
 
+			sqlName, err := sqlServer.Container.Name(ctx)
+			if err != nil {
+				return err
+			}
+
 			t.Log("SQL Server IP: " + sqlIp)
+			t.Log("SQL Server Container Name: " + sqlName)
 
 			octopusContainer, err := o.setupOctopus(ctx, "Server="+sqlIp+",1433;Database=OctopusDeploy;User=sa;Password=Password01!", networkName)
 			if err != nil {
 				return err
 			}
 
-			t.Log("Octopus URI: " + octopusContainer.URI)
+			octoIp, err := octopusContainer.Container.ContainerIP(ctx)
+			if err != nil {
+				return err
+			}
+
+			octoName, err := octopusContainer.Container.Name(ctx)
+			if err != nil {
+				return err
+			}
+
+			t.Log("OctopusIP: " + octoIp)
+			t.Log("OctopusIP Container Name: " + octoName)
 
 			// Clean up the container after the test is complete
 			defer func() {
