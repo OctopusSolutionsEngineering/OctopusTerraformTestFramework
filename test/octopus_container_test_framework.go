@@ -90,7 +90,7 @@ func (o *OctopusContainerTest) getProvider() testcontainers.ProviderType {
 func (o *OctopusContainerTest) setupNetwork(ctx context.Context) (testcontainers.Network, error) {
 	return testcontainers.GenericNetwork(ctx, testcontainers.GenericNetworkRequest{
 		NetworkRequest: testcontainers.NetworkRequest{
-			Name:           "octopusterraformtests",
+			Name:           "octotera" + uuid.New().String(),
 			CheckDuplicate: false,
 			SkipReaper:     o.getReaperSkipped(),
 		},
