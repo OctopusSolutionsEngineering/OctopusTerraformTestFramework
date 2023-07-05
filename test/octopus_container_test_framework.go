@@ -87,8 +87,10 @@ func (o *OctopusContainerTest) getProvider() testcontainers.ProviderType {
 }
 
 // setupNetwork creates an internal network for Octopus and MS SQL
-func (o *OctopusContainerTest) setupNetwork(ctx context.Context) (testcontainers.Network, error) {
-	return testcontainers.GenericNetwork(ctx, testcontainers.GenericNetworkRequest{
+func (o *OctopusContainerTest) setupNetwork(ctx context.Context) (testcontainers.Network, string, error) {
+	name := "octotera" + uuid.New().String()
+
+	network, err := testcontainers.GenericNetwork(ctx, testcontainers.GenericNetworkRequest{
 		NetworkRequest: testcontainers.NetworkRequest{
 			Name:           "octotera" + uuid.New().String(),
 			CheckDuplicate: false,
@@ -96,10 +98,12 @@ func (o *OctopusContainerTest) setupNetwork(ctx context.Context) (testcontainers
 		},
 		ProviderType: o.getProvider(),
 	})
+
+	return network, name, err
 }
 
 // setupDatabase creates a MSSQL container
-func (o *OctopusContainerTest) setupDatabase(ctx context.Context) (*mysqlContainer, error) {
+func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string) (*mysqlContainer, error) {
 	req := testcontainers.ContainerRequest{
 		Image:        "mcr.microsoft.com/mssql/server",
 		ExposedPorts: []string{"1433/tcp"},
@@ -113,7 +117,7 @@ func (o *OctopusContainerTest) setupDatabase(ctx context.Context) (*mysqlContain
 			}),
 		SkipReaper: o.getReaperSkipped(),
 		Networks: []string{
-			"octopusterraformtests",
+			network,
 		},
 	}
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
@@ -160,7 +164,7 @@ func (o *OctopusContainerTest) getRetryCount() uint {
 }
 
 // setupOctopus creates an Octopus container
-func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString string) (*OctopusContainer, error) {
+func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString string, network string) (*OctopusContainer, error) {
 	if os.Getenv("LICENSE") == "" {
 		return nil, errors.New("the LICENSE environment variable must be set to a base 64 encoded Octopus license key")
 	}
@@ -185,7 +189,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		WaitingFor: wait.ForLog("Listening for HTTP requests on").WithStartupTimeout(30 * time.Minute),
 		SkipReaper: o.getReaperSkipped(),
 		Networks: []string{
-			"octopusterraformtests",
+			network,
 		},
 	}
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
@@ -227,12 +231,12 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 
 			ctx := context.Background()
 
-			network, err := o.setupNetwork(ctx)
+			network, networkName, err := o.setupNetwork(ctx)
 			if err != nil {
 				return err
 			}
 
-			sqlServer, err := o.setupDatabase(ctx)
+			sqlServer, err := o.setupDatabase(ctx, networkName)
 			if err != nil {
 				return err
 			}
@@ -244,7 +248,7 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 
 			t.Log("SQL Server IP: " + sqlIp)
 
-			octopusContainer, err := o.setupOctopus(ctx, "Server="+sqlIp+",1433;Database=OctopusDeploy;User=sa;Password=Password01!")
+			octopusContainer, err := o.setupOctopus(ctx, "Server="+sqlIp+",1433;Database=OctopusDeploy;User=sa;Password=Password01!", networkName)
 			if err != nil {
 				return err
 			}
