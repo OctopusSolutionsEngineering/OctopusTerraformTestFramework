@@ -11,7 +11,6 @@ import (
 	lintwait "github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/wait"
 	"github.com/avast/retry-go/v4"
 	"github.com/google/uuid"
-	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 	"net/http"
@@ -105,6 +104,7 @@ func (o *OctopusContainerTest) setupNetwork(ctx context.Context) (testcontainers
 // setupDatabase creates a MSSQL container
 func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string) (*mysqlContainer, error) {
 	req := testcontainers.ContainerRequest{
+		Name:         "mssql-" + uuid.New().String(),
 		Image:        "mcr.microsoft.com/mssql/server",
 		ExposedPorts: []string{"1433/tcp"},
 		Env: map[string]string{
@@ -174,6 +174,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	}
 
 	req := testcontainers.ContainerRequest{
+		Name:         "octopus-" + uuid.New().String(),
 		Image:        "octopusdeploy/octopusdeploy:" + o.getOctopusVersion(),
 		ExposedPorts: []string{"8080/tcp"},
 		Env: map[string]string{
