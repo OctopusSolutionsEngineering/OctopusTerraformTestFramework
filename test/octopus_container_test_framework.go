@@ -124,6 +124,7 @@ func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
+		Reuse:            false,
 	})
 	if err != nil {
 		return nil, err
@@ -197,6 +198,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
+		Reuse:            false,
 	})
 	if err != nil {
 		return nil, err
