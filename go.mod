@@ -3,11 +3,11 @@ module github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework
 go 1.18
 
 require (
-	github.com/OctopusDeploy/go-octopusdeploy/v2 v2.21.0
-	github.com/avast/retry-go/v4 v4.3.3
+	github.com/OctopusDeploy/go-octopusdeploy/v2 v2.33.3
+	github.com/avast/retry-go/v4 v4.5.0
 	github.com/google/uuid v1.3.1
 	github.com/testcontainers/testcontainers-go v0.25.0
-	github.com/wk8/go-ordered-map/v2 v2.1.7
+	github.com/wk8/go-ordered-map/v2 v2.1.8
 )
 
 require (
