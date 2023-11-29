@@ -358,7 +358,7 @@ func (o *OctopusContainerTest) deleteIfExists(file string) error {
 		return nil
 	}
 
-	return nil
+	return err
 }
 
 // TerraformInit runs "terraform init"
