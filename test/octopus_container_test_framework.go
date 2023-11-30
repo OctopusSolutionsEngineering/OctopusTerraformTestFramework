@@ -11,6 +11,7 @@ import (
 	lintwait "github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/wait"
 	"github.com/avast/retry-go/v4"
 	"github.com/google/uuid"
+	cp "github.com/otiai10/copy"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
@@ -552,41 +553,39 @@ func (o *OctopusContainerTest) InitialiseOctopus(
 
 // GetOutputVariable reads a Terraform output variable
 func (o *OctopusContainerTest) GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (string, error) {
-	// Getting the state directly after performing an apply sometimes fails, so wrap this in a retry.
-	return retry.DoWithData(func() (string, error) {
-		// Note that you "terraform output -raw" can still get a 0 exit code if there was an error:
-		// https://github.com/hashicorp/terraform/issues/32384
-		// So we must get the JSON.
-		cmnd := exec.Command(
-			"terraform",
-			"output",
-			"-json",
-			outputVar)
-		cmnd.Dir = terraformDir
-		out, err := cmnd.Output()
 
-		if err != nil {
-			if os.Getenv("OCTOTESTDUMPSTATE") == "true" {
-				o.ShowState(t, terraformDir)
-			}
-			exitError, ok := err.(*exec.ExitError)
-			if ok {
-				t.Log("terraform output error: " + string(exitError.Stderr))
-			} else {
-				t.Log(err)
-			}
-			return "", err
+	// Note that you "terraform output -raw" can still get a 0 exit code if there was an error:
+	// https://github.com/hashicorp/terraform/issues/32384
+	// So we must get the JSON.
+	cmnd := exec.Command(
+		"terraform",
+		"output",
+		"-json",
+		outputVar)
+	cmnd.Dir = terraformDir
+	out, err := cmnd.Output()
+
+	if err != nil {
+		if os.Getenv("OCTOTESTDUMPSTATE") == "true" {
+			o.ShowState(t, terraformDir)
 		}
-
-		data := ""
-		err = json.Unmarshal(out, &data)
-
-		if err != nil {
-			return "", err
+		exitError, ok := err.(*exec.ExitError)
+		if ok {
+			t.Log("terraform output error: " + string(exitError.Stderr))
+		} else {
+			t.Log(err)
 		}
+		return "", err
+	}
 
-		return data, nil
-	}, retry.Attempts(3), retry.Delay(1*time.Second))
+	data := ""
+	err = json.Unmarshal(out, &data)
+
+	if err != nil {
+		return "", err
+	}
+
+	return data, nil
 }
 
 // ShowState reads the terraform state
@@ -621,14 +620,28 @@ func (o *OctopusContainerTest) ShowState(t *testing.T, terraformDir string) erro
 func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, terraformBaseDir string, terraformModuleDir string, populateVars []string) (string, error) {
 	t.Log("POPULATING TEST SPACE")
 
-	spaceName := strings.ReplaceAll(fmt.Sprint(uuid.New()), "-", "")[:20]
-	err := o.InitialiseOctopus(t, container, filepath.Join(terraformBaseDir, "1-singlespace"), "", filepath.Join(terraformBaseDir, terraformModuleDir), spaceName, []string{}, []string{}, populateVars)
+	spacePopulateDir := filepath.Join(terraformBaseDir, "1-singlespace")
+	dir, err := o.copyDir(spacePopulateDir)
 
 	if err != nil {
 		return "", err
 	}
 
-	spaceId, err := o.GetOutputVariable(t, filepath.Join(terraformBaseDir, "1-singlespace"), "octopus_space_id")
+	defer func() {
+		err := os.RemoveAll(spacePopulateDir)
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+	}()
+
+	spaceName := strings.ReplaceAll(fmt.Sprint(uuid.New()), "-", "")[:20]
+	err = o.InitialiseOctopus(t, container, dir, "", filepath.Join(terraformBaseDir, terraformModuleDir), spaceName, []string{}, []string{}, populateVars)
+
+	if err != nil {
+		return "", err
+	}
+
+	spaceId, err := o.GetOutputVariable(t, dir, "octopus_space_id")
 
 	if err != nil || spaceId == "" {
 		// I've seen number of tests fail because the state file is blank and there is no output to read.
@@ -696,4 +709,14 @@ func (o *OctopusContainerTest) ActWithCustomPrePopulatedSpace(t *testing.T, cont
 	}
 
 	return spaceId, err
+}
+
+func (o *OctopusContainerTest) copyDir(source string) (string, error) {
+	dest, err := os.MkdirTemp("", "octoterra")
+	if err != nil {
+		return "", err
+	}
+	err = cp.Copy(source, dest)
+
+	return dest, err
 }

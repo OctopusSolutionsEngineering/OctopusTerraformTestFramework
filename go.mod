@@ -6,6 +6,7 @@ require (
 	github.com/OctopusDeploy/go-octopusdeploy/v2 v2.33.3
 	github.com/avast/retry-go/v4 v4.5.0
 	github.com/google/uuid v1.3.1
+	github.com/otiai10/copy v1.14.0
 	github.com/testcontainers/testcontainers-go v0.26.0
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 )
@@ -19,6 +20,7 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/containerd/containerd v1.7.7 // indirect
+	github.com/containerd/log v0.1.0 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dghubble/sling v1.4.1 // indirect
@@ -59,6 +61,7 @@ require (
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
 	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
