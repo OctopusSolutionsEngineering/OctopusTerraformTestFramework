@@ -552,38 +552,41 @@ func (o *OctopusContainerTest) InitialiseOctopus(
 
 // GetOutputVariable reads a Terraform output variable
 func (o *OctopusContainerTest) GetOutputVariable(t *testing.T, terraformDir string, outputVar string) (string, error) {
-	// Note that you "terraform output -raw" can still get a 0 exit code if there was an error:
-	// https://github.com/hashicorp/terraform/issues/32384
-	// So we must get the JSON.
-	cmnd := exec.Command(
-		"terraform",
-		"output",
-		"-json",
-		outputVar)
-	cmnd.Dir = terraformDir
-	out, err := cmnd.Output()
+	// Getting the state directly after performing an apply sometimes fails, so wrap this in a retry.
+	return retry.DoWithData(func() (string, error) {
+		// Note that you "terraform output -raw" can still get a 0 exit code if there was an error:
+		// https://github.com/hashicorp/terraform/issues/32384
+		// So we must get the JSON.
+		cmnd := exec.Command(
+			"terraform",
+			"output",
+			"-json",
+			outputVar)
+		cmnd.Dir = terraformDir
+		out, err := cmnd.Output()
 
-	if err != nil {
-		if os.Getenv("OCTOTESTDUMPSTATE") == "true" {
-			o.ShowState(t, terraformDir)
+		if err != nil {
+			if os.Getenv("OCTOTESTDUMPSTATE") == "true" {
+				o.ShowState(t, terraformDir)
+			}
+			exitError, ok := err.(*exec.ExitError)
+			if ok {
+				t.Log("terraform output error: " + string(exitError.Stderr))
+			} else {
+				t.Log(err)
+			}
+			return "", err
 		}
-		exitError, ok := err.(*exec.ExitError)
-		if ok {
-			t.Log("terraform output error: " + string(exitError.Stderr))
-		} else {
-			t.Log(err)
+
+		data := ""
+		err = json.Unmarshal(out, &data)
+
+		if err != nil {
+			return "", err
 		}
-		return "", err
-	}
 
-	data := ""
-	err = json.Unmarshal(out, &data)
-
-	if err != nil {
-		return "", err
-	}
-
-	return data, nil
+		return data, nil
+	}, retry.Attempts(3), retry.Delay(1*time.Second))
 }
 
 // ShowState reads the terraform state
