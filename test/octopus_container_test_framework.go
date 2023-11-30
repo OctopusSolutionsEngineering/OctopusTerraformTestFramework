@@ -403,9 +403,13 @@ func (o *OctopusContainerTest) TerraformApply(t *testing.T, terraformProjectDir 
 	t.Log(string(out))
 
 	if err != nil {
+		t.Log("server: " + server)
+		t.Log("spaceId: " + spaceId)
+
 		exitError, ok := err.(*exec.ExitError)
 		if ok {
-			t.Log("terraform apply error: " + string(exitError.Stderr))
+			t.Log("terraform apply error")
+			t.Log(string(exitError.Stderr))
 		} else {
 			t.Log(err)
 		}
