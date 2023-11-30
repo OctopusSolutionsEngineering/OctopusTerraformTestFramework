@@ -373,7 +373,7 @@ func (o *OctopusContainerTest) TerraformInit(t *testing.T, terraformProjectDir s
 	if err != nil {
 		exitError, ok := err.(*exec.ExitError)
 		if ok {
-			t.Log("terraform init return code: " + string(exitError.Stderr))
+			t.Log("terraform init error: " + string(exitError.Stderr))
 		} else {
 			t.Log(err.Error())
 		}
@@ -404,7 +404,7 @@ func (o *OctopusContainerTest) TerraformApply(t *testing.T, terraformProjectDir 
 	if err != nil {
 		exitError, ok := err.(*exec.ExitError)
 		if ok {
-			t.Log("terraform apply return code: " + string(exitError.Stderr))
+			t.Log("terraform apply error: " + string(exitError.Stderr))
 		} else {
 			t.Log(err)
 		}
@@ -569,7 +569,7 @@ func (o *OctopusContainerTest) GetOutputVariable(t *testing.T, terraformDir stri
 		}
 		exitError, ok := err.(*exec.ExitError)
 		if ok {
-			t.Log("terraform output return code: " + string(exitError.Stderr))
+			t.Log("terraform output error: " + string(exitError.Stderr))
 		} else {
 			t.Log(err)
 		}
