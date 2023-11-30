@@ -536,7 +536,7 @@ func (o *OctopusContainerTest) InitialiseOctopus(
 		// get the ID of any new space created, which will be used in the subsequent Terraform executions
 		if settings.SpaceIdOutputVar != "" {
 			spaceId, err = o.GetOutputVariable(t, terraformProjectDir, settings.SpaceIdOutputVar)
-			if err != nil || spaceId == "" {
+			if err != nil || len(strings.TrimSpace(spaceId)) == 0 {
 				// I've seen number of tests fail because the state file is blank and there is no output to read.
 				// We offer a workaround for this by setting the default space ID, which is usually Spaces-2
 				if os.Getenv("OCTOTESTDEFAULTSPACEID") != "" {
@@ -643,7 +643,7 @@ func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, te
 
 	spaceId, err := o.GetOutputVariable(t, dir, "octopus_space_id")
 
-	if err != nil || spaceId == "" {
+	if err != nil || len(strings.TrimSpace(spaceId)) == 0 {
 		// I've seen number of tests fail because the state file is blank and there is no output to read.
 		// We offer a workaround for this by setting the default space ID, which is usually Spaces-2
 		if os.Getenv("OCTOTESTDEFAULTSPACEID") != "" {
@@ -670,7 +670,7 @@ func (o *OctopusContainerTest) ActWithCustomSpace(t *testing.T, container *Octop
 
 	spaceId, err := o.GetOutputVariable(t, initialiseModuleDir, "octopus_space_id")
 
-	if err != nil || spaceId == "" {
+	if err != nil || len(strings.TrimSpace(spaceId)) == 0 {
 		// I've seen number of tests fail because the state file is blank and there is no output to read.
 		// We offer a workaround for this by setting the default space ID, which is usually Spaces-2
 		if os.Getenv("OCTOTESTDEFAULTSPACEID") != "" {
@@ -697,7 +697,7 @@ func (o *OctopusContainerTest) ActWithCustomPrePopulatedSpace(t *testing.T, cont
 
 	spaceId, err := o.GetOutputVariable(t, initialiseModuleDir, "octopus_space_id")
 
-	if err != nil || spaceId == "" {
+	if err != nil || len(strings.TrimSpace(spaceId)) == 0 {
 		// I've seen number of tests fail because the state file is blank and there is no output to read.
 		// We offer a workaround for this by setting the default space ID, which is usually Spaces-2
 		if os.Getenv("OCTOTESTDEFAULTSPACEID") != "" {
