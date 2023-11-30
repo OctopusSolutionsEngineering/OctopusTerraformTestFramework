@@ -321,6 +321,7 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 			return testFunc(t, octopusContainer, client)
 		},
 		retry.Attempts(o.getRetryCount()),
+		retry.Delay(30*time.Second),
 	)
 
 	if err != nil {
