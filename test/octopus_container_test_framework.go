@@ -290,6 +290,21 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 					}
 				}
 
+				// Stop the containers
+				stopTime := 1 * time.Minute
+				octoStopErr := octopusContainer.Stop(ctx, &stopTime)
+
+				if octoStopErr != nil {
+					t.Log("Failed to stop the Octopus container")
+				}
+
+				sqlStopErr := sqlServer.Stop(ctx, &stopTime)
+
+				if sqlStopErr != nil {
+					t.Log("Failed to stop the Octopus container")
+				}
+
+				// Terminate the containers
 				octoTerminateErr := octopusContainer.Terminate(ctx)
 				sqlTerminateErr := sqlServer.Terminate(ctx)
 
