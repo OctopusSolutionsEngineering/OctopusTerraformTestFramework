@@ -93,7 +93,7 @@ func (o *OctopusContainerTest) setupNetwork(ctx context.Context) (testcontainers
 
 	network, err := testcontainers.GenericNetwork(ctx, testcontainers.GenericNetworkRequest{
 		NetworkRequest: testcontainers.NetworkRequest{
-			Name: "octotera" + uuid.New().String(),
+			Name: name,
 			// Option CheckDuplicate is there to provide a best effort checking of any networks
 			// which has the same name but it is not guaranteed to catch all name collisions.
 			CheckDuplicate: false,
