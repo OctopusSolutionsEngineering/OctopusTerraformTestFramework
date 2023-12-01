@@ -276,8 +276,8 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 				return err
 			}
 
-			t.Log("OctopusIP: " + octoIp)
-			t.Log("OctopusIP Container Name: " + octoName)
+			t.Log("Octopus IP: " + octoIp)
+			t.Log("Octopus Container Name: " + octoName)
 
 			// Clean up the container after the test is complete
 			defer func() {
