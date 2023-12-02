@@ -69,15 +69,6 @@ func (o *OctopusContainerTest) enableContainerLogging(container testcontainers.C
 	return nil
 }
 
-// getReaperSkipped will return true if running in a podman environment
-func (o *OctopusContainerTest) getReaperSkipped() bool {
-	if strings.Contains(os.Getenv("DOCKER_HOST"), "podman") {
-		return true
-	}
-
-	return false
-}
-
 // getProvider returns the test containers provider
 func (o *OctopusContainerTest) getProvider() testcontainers.ProviderType {
 	if strings.Contains(os.Getenv("DOCKER_HOST"), "podman") {
@@ -97,7 +88,6 @@ func (o *OctopusContainerTest) setupNetwork(ctx context.Context) (testcontainers
 			// Option CheckDuplicate is there to provide a best effort checking of any networks
 			// which has the same name but it is not guaranteed to catch all name collisions.
 			CheckDuplicate: false,
-			SkipReaper:     o.getReaperSkipped(),
 		},
 		ProviderType: o.getProvider(),
 	})
@@ -119,7 +109,6 @@ func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string
 			func(exitCode int) bool {
 				return exitCode == 0
 			}),
-		SkipReaper: o.getReaperSkipped(),
 		Networks: []string{
 			network,
 		},
@@ -193,7 +182,6 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		},
 		Privileged: false,
 		WaitingFor: wait.ForLog("Listening for HTTP requests on").WithStartupTimeout(30 * time.Minute),
-		SkipReaper: o.getReaperSkipped(),
 		Networks: []string{
 			network,
 		},
