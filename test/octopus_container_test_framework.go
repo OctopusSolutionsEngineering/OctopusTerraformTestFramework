@@ -650,7 +650,7 @@ func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, te
 	}
 
 	defer func() {
-		err := os.RemoveAll(spacePopulateDir)
+		err := os.RemoveAll(dir)
 		if err != nil {
 			t.Fatalf(err.Error())
 		}
