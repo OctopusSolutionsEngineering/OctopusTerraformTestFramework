@@ -204,7 +204,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	if err != nil {
 		return nil, err
 	}
-	t.Log("FINISHED creating Octopus container")
+	t.Log("Finished creating Octopus container")
 
 	// Display the container logs
 	if os.Getenv("OCTODISABLEOCTOCONTAINERLOGGING") != "true" {
