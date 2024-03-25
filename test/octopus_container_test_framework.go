@@ -139,6 +139,15 @@ func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string
 	}, nil
 }
 
+func (o *OctopusContainerTest) getOctopusImageUrl() string {
+	overrideImageUrl := os.Getenv("OCTOTESTIMAGEURL")
+	if overrideImageUrl != "" {
+		return overrideImageUrl
+	}
+
+	return "octopusdeploy/octopusdeploy"
+}
+
 func (o *OctopusContainerTest) getOctopusVersion() string {
 	overrideOctoTag := os.Getenv("OCTOTESTVERSION")
 	if overrideOctoTag != "" {
@@ -158,7 +167,7 @@ func (o *OctopusContainerTest) getRetryCount() uint {
 }
 
 // setupOctopus creates an Octopus container
-func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString string, network string) (*OctopusContainer, error) {
+func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString string, network string, t *testing.T) (*OctopusContainer, error) {
 	if os.Getenv("LICENSE") == "" {
 		return nil, errors.New("the LICENSE environment variable must be set to a base 64 encoded Octopus license key")
 	}
@@ -169,7 +178,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 
 	req := testcontainers.ContainerRequest{
 		Name:         "octopus-" + uuid.New().String(),
-		Image:        "octopusdeploy/octopusdeploy:" + o.getOctopusVersion(),
+		Image:        o.getOctopusImageUrl() + ":" + o.getOctopusVersion(),
 		ExposedPorts: []string{"8080/tcp"},
 		Env: map[string]string{
 			"ACCEPT_EULA":                   "Y",
@@ -186,6 +195,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 			network,
 		},
 	}
+	t.Log("Creating Octopus container")
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
@@ -194,6 +204,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	if err != nil {
 		return nil, err
 	}
+	t.Log("Finished creating Octopus container")
 
 	// Display the container logs
 	if os.Getenv("OCTODISABLEOCTOCONTAINERLOGGING") != "true" {
@@ -249,7 +260,7 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 			t.Log("SQL Server IP: " + sqlIp)
 			t.Log("SQL Server Container Name: " + sqlName)
 
-			octopusContainer, err := o.setupOctopus(ctx, "Server="+sqlIp+",1433;Database=OctopusDeploy;User=sa;Password=Password01!", networkName)
+			octopusContainer, err := o.setupOctopus(ctx, "Server="+sqlIp+",1433;Database=OctopusDeploy;User=sa;Password=Password01!", networkName, t)
 			if err != nil {
 				return err
 			}
