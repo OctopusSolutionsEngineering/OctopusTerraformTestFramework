@@ -1,10 +1,12 @@
 module github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework
 
-go 1.18
+go 1.21
+
+toolchain go1.22.1
 
 require (
-	github.com/OctopusDeploy/go-octopusdeploy/v2 v2.33.3
-	github.com/avast/retry-go/v4 v4.5.0
+	github.com/OctopusDeploy/go-octopusdeploy/v2 v2.40.2
+	github.com/avast/retry-go/v4 v4.5.1
 	github.com/google/uuid v1.6.0
 	github.com/otiai10/copy v1.14.0
 	github.com/testcontainers/testcontainers-go v0.29.1
