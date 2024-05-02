@@ -188,6 +188,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 			"ADMIN_USERNAME":                "admin",
 			"ADMIN_PASSWORD":                "Password01!",
 			"OCTOPUS_SERVER_BASE64_LICENSE": os.Getenv("LICENSE"),
+			"ENABLE_USAGE":                  "N",
 		},
 		Privileged: false,
 		WaitingFor: wait.ForLog("Listening for HTTP requests on").WithStartupTimeout(30 * time.Minute),
