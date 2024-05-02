@@ -48,3 +48,4 @@ An example of this directory has been provided at [1-singlespace](terraform%2F1-
 * `OCTOTESTSKIPINIT` - set to true to skip `terraform init`. Skipping the init phase is useful when you define a provider override in the `~/.terraformrc` file.
 * `OCTODISABLEOCTOCONTAINERLOGGING` - set to true to skip logging output from the Octopus container.
 * `LICENSE` - Set to the base 64 encoded version of an Octopus XML license. See `Octopus Dev License` in 1Password for a value.
+* `ENABLE_USAGE` - set to `N` to stop Octopus from sending telemetry.
