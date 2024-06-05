@@ -183,6 +183,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		Env: map[string]string{
 			"ACCEPT_EULA":                   "Y",
 			"DB_CONNECTION_STRING":          connString,
+			"CONNSTRING":                    connString,
 			"ADMIN_API_KEY":                 ApiKey,
 			"DISABLE_DIND":                  "Y",
 			"ADMIN_USERNAME":                "admin",
