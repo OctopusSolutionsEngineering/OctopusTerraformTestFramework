@@ -181,9 +181,11 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		Image:        o.getOctopusImageUrl() + ":" + o.getOctopusVersion(),
 		ExposedPorts: []string{"8080/tcp"},
 		Env: map[string]string{
-			"ACCEPT_EULA":                   "Y",
-			"DB_CONNECTION_STRING":          connString,
+			"ACCEPT_EULA":          "Y",
+			"DB_CONNECTION_STRING": connString,
+			// CONNSTRING and CREATE_DB are used by the octopusdeploy/linux image
 			"CONNSTRING":                    connString,
+			"CREATE_DB":                     "Y",
 			"ADMIN_API_KEY":                 ApiKey,
 			"DISABLE_DIND":                  "Y",
 			"ADMIN_USERNAME":                "admin",
