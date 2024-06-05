@@ -183,7 +183,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		Env: map[string]string{
 			"ACCEPT_EULA":          "Y",
 			"DB_CONNECTION_STRING": connString,
-			// CONNSTRING and CREATE_DB are used by the octopusdeploy/linux image
+			// CONNSTRING, LICENSE_BASE64, and CREATE_DB are used by the octopusdeploy/linux image
 			"CONNSTRING":                    connString,
 			"CREATE_DB":                     "Y",
 			"ADMIN_API_KEY":                 ApiKey,
@@ -191,6 +191,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 			"ADMIN_USERNAME":                "admin",
 			"ADMIN_PASSWORD":                "Password01!",
 			"OCTOPUS_SERVER_BASE64_LICENSE": os.Getenv("LICENSE"),
+			"LICENSE_BASE64":                os.Getenv("LICENSE"),
 			"ENABLE_USAGE":                  "N",
 		},
 		Privileged: false,
