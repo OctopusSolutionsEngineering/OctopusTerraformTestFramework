@@ -658,7 +658,8 @@ func (o *OctopusContainerTest) ShowState(t *testing.T, terraformDir string) erro
 
 // Act initialises Octopus and MSSQL
 func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, terraformBaseDir string, terraformModuleDir string, populateVars []string) (string, error) {
-	t.Log("POPULATING TEST SPACE")
+	spaceName := strings.ReplaceAll(fmt.Sprint(uuid.New()), "-", "")[:20]
+	t.Log("POPULATING TEST SPACE " + spaceName)
 
 	spacePopulateDir := filepath.Join(terraformBaseDir, "1-singlespace")
 	dir, err := o.copyDir(spacePopulateDir)
@@ -674,7 +675,6 @@ func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, te
 		}
 	}()
 
-	spaceName := strings.ReplaceAll(fmt.Sprint(uuid.New()), "-", "")[:20]
 	err = o.InitialiseOctopus(t, container, dir, "", filepath.Join(terraformBaseDir, terraformModuleDir), spaceName, []string{}, []string{}, populateVars)
 
 	if err != nil {
