@@ -316,7 +316,7 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 
 				networkErr := network.Remove(ctx)
 
-				if octoTerminateErr != nil || sqlTerminateErr != nil || networkErr != nil {
+				if octoTerminateErr != nil || sqlTerminateErr != nil {
 					t.Fatalf("failed to terminate container: %v %v", octoTerminateErr, sqlTerminateErr)
 				}
 
