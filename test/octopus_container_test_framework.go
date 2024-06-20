@@ -307,7 +307,7 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 				sqlStopErr := sqlServer.Stop(ctx, &stopTime)
 
 				if sqlStopErr != nil {
-					t.Log("Failed to stop the Octopus container")
+					t.Log("Failed to stop the MSSQL container")
 				}
 
 				// Terminate the containers
@@ -319,6 +319,14 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 				if octoTerminateErr != nil || sqlTerminateErr != nil || networkErr != nil {
 					t.Fatalf("failed to terminate container: %v %v", octoTerminateErr, sqlTerminateErr)
 				}
+
+				if networkErr != nil {
+					t.Fatalf("failed to remove network: %v", networkErr)
+				}
+
+				// I've noticed some race conditions where it appears a terminated container is reused in the
+				// retry loop. We give the Docker resources a chance to clean up before continuing.
+				time.Sleep(30 * time.Second)
 			}()
 
 			// give the server 5 minutes to start up
