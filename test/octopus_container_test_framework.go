@@ -535,7 +535,7 @@ func (o *OctopusContainerTest) InitialiseOctopus(
 	// This test creates a new space and then populates the space.
 	terraformProjectDirs := orderedmap.New[string, InitializationSettings]()
 	terraformProjectDirs.Set(terraformInitModuleDir, InitializationSettings{
-		InputVars:        append(initialiseVars, "-var=octopus_space_name="+spaceName),
+		InputVars:        append(initialiseVars, "-var=octopus_space_name="+spaceName, "-var=octopus_space_description="+t.Name()),
 		SpaceIdOutputVar: "octopus_space_id",
 	})
 	if prepopulateModuleDir != "" {
