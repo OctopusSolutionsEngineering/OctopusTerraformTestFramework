@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -56,6 +57,7 @@ func (g *TestLogConsumer) Accept(l testcontainers.Log) {
 }
 
 type OctopusContainerTest struct {
+	mu sync.Mutex
 }
 
 func (o *OctopusContainerTest) enableContainerLogging(container testcontainers.Container, ctx context.Context) error {
@@ -231,6 +233,55 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	return &OctopusContainer{Container: container, URI: uri}, nil
 }
 
+// createDockerInfrastructure attemptes to create the complete Docker stack containing a
+// network, MSSQL container, and Octopus container. The return values include as much of
+// the partial stack as possible in the case of an error.
+func (o *OctopusContainerTest) createDockerInfrastructure(t *testing.T, ctx context.Context) (testcontainers.Network, *OctopusContainer, *mysqlContainer, error) {
+
+	network, networkName, err := o.setupNetwork(ctx)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	sqlServer, err := o.setupDatabase(ctx, networkName)
+	if err != nil {
+		return network, nil, sqlServer, err
+	}
+
+	sqlIp, err := sqlServer.Container.ContainerIP(ctx)
+	if err != nil {
+		return network, nil, sqlServer, err
+	}
+
+	sqlName, err := sqlServer.Container.Name(ctx)
+	if err != nil {
+		return network, nil, sqlServer, err
+	}
+
+	t.Log("SQL Server IP: " + sqlIp)
+	t.Log("SQL Server Container Name: " + sqlName)
+
+	octopusContainer, err := o.setupOctopus(ctx, "Server="+sqlIp+",1433;Database=OctopusDeploy;User=sa;Password=Password01!", networkName, t)
+	if err != nil {
+		return network, octopusContainer, sqlServer, err
+	}
+
+	octoIp, err := octopusContainer.Container.ContainerIP(ctx)
+	if err != nil {
+		return network, octopusContainer, sqlServer, err
+	}
+
+	octoName, err := octopusContainer.Container.Name(ctx)
+	if err != nil {
+		return network, octopusContainer, sqlServer, err
+	}
+
+	t.Log("Octopus IP: " + octoIp)
+	t.Log("Octopus Container Name: " + octoName)
+
+	return network, octopusContainer, sqlServer, nil
+}
+
 // ArrangeTest is wrapper that initialises Octopus, runs a test, and cleans up the containers
 func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testing.T, container *OctopusContainer, client *client.Client) error) {
 	err := retry.Do(
@@ -242,92 +293,76 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 
 			ctx := context.Background()
 
-			network, networkName, err := o.setupNetwork(ctx)
-			if err != nil {
-				return err
-			}
+			// I don't think test containers are thread safe - parallel tests
+			// frequently show that multiple tests access the same containers.
+			// So only one thread can create a stack at a time
+			o.mu.Lock()
+			network, octopusContainer, sqlServer, err := o.createDockerInfrastructure(t, ctx)
+			o.mu.Unlock()
 
-			sqlServer, err := o.setupDatabase(ctx, networkName)
-			if err != nil {
-				return err
-			}
-
-			sqlIp, err := sqlServer.Container.ContainerIP(ctx)
-			if err != nil {
-				return err
-			}
-
-			sqlName, err := sqlServer.Container.Name(ctx)
-			if err != nil {
-				return err
-			}
-
-			t.Log("SQL Server IP: " + sqlIp)
-			t.Log("SQL Server Container Name: " + sqlName)
-
-			octopusContainer, err := o.setupOctopus(ctx, "Server="+sqlIp+",1433;Database=OctopusDeploy;User=sa;Password=Password01!", networkName, t)
-			if err != nil {
-				return err
-			}
-
-			octoIp, err := octopusContainer.Container.ContainerIP(ctx)
-			if err != nil {
-				return err
-			}
-
-			octoName, err := octopusContainer.Container.Name(ctx)
-			if err != nil {
-				return err
-			}
-
-			t.Log("Octopus IP: " + octoIp)
-			t.Log("Octopus Container Name: " + octoName)
-
-			// Clean up the container after the test is complete
+			// Attempt to clean up whatever resources were created.
+			// Don't return errors for the cleanup, just report them
 			defer func() {
-				// This fixes the "can not get logs from container which is dead or marked for removal" error
-				// See https://github.com/testcontainers/testcontainers-go/issues/606
-				if os.Getenv("OCTODISABLEOCTOCONTAINERLOGGING") != "true" {
-					stopProducerErr := octopusContainer.StopLogProducer()
+				o.mu.Lock()
+				defer o.mu.Unlock()
 
-					// try to continue on if there was an error stopping the producer
-					if stopProducerErr != nil {
-						t.Log(stopProducerErr)
+				stopTime := 1 * time.Minute
+
+				if octopusContainer != nil {
+					// This fixes the "can not get logs from container which is dead or marked for removal" error
+					// See https://github.com/testcontainers/testcontainers-go/issues/606
+					if os.Getenv("OCTODISABLEOCTOCONTAINERLOGGING") != "true" {
+						stopProducerErr := octopusContainer.StopLogProducer()
+
+						// try to continue on if there was an error stopping the producer
+						if stopProducerErr != nil {
+							t.Log(stopProducerErr)
+						}
+					}
+
+					// Stop the containers
+					octoStopErr := octopusContainer.Stop(ctx, &stopTime)
+
+					if octoStopErr != nil {
+						t.Log("Failed to stop the Octopus container")
+					}
+
+					octoTerminateErr := octopusContainer.Terminate(ctx)
+
+					if octoTerminateErr != nil {
+						t.Log("Failed to terminate the Octopus container")
 					}
 				}
 
-				// Stop the containers
-				stopTime := 1 * time.Minute
-				octoStopErr := octopusContainer.Stop(ctx, &stopTime)
+				if sqlServer != nil {
+					sqlStopErr := sqlServer.Stop(ctx, &stopTime)
 
-				if octoStopErr != nil {
-					t.Log("Failed to stop the Octopus container")
-				}
+					if sqlStopErr != nil {
+						t.Log("Failed to stop the MSSQL container")
+					}
 
-				sqlStopErr := sqlServer.Stop(ctx, &stopTime)
+					sqlTerminateErr := sqlServer.Terminate(ctx)
 
-				if sqlStopErr != nil {
-					t.Log("Failed to stop the MSSQL container")
+					if sqlTerminateErr != nil {
+						t.Log("Failed to terminate the MSSQL container")
+					}
 				}
 
 				// Terminate the containers
-				octoTerminateErr := octopusContainer.Terminate(ctx)
-				sqlTerminateErr := sqlServer.Terminate(ctx)
+				if network != nil {
+					networkErr := network.Remove(ctx)
 
-				networkErr := network.Remove(ctx)
-
-				if octoTerminateErr != nil || sqlTerminateErr != nil {
-					t.Fatalf("failed to terminate container: %v %v", octoTerminateErr, sqlTerminateErr)
+					if networkErr != nil {
+						t.Log("failed to remove network: %v", networkErr)
+					}
 				}
-
-				if networkErr != nil {
-					t.Fatalf("failed to remove network: %v", networkErr)
-				}
-
-				// I've noticed some race conditions where it appears a terminated container is reused in the
-				// retry loop. We give the Docker resources a chance to clean up before continuing.
-				time.Sleep(30 * time.Second)
 			}()
+
+			// In the event of a failed stack creation, use the defer function above
+			// to clean up and then return the error
+			if err != nil {
+				return err
+			}
 
 			// give the server 5 minutes to start up
 			err = lintwait.WaitForResource(func() error {
