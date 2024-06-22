@@ -56,8 +56,9 @@ func (g *TestLogConsumer) Accept(l testcontainers.Log) {
 	fmt.Println(string(l.Content))
 }
 
+var globalMutex = sync.Mutex{}
+
 type OctopusContainerTest struct {
-	mu sync.Mutex
 }
 
 func (o *OctopusContainerTest) enableContainerLogging(container testcontainers.Container, ctx context.Context) error {
@@ -296,15 +297,15 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 			// I don't think test containers are thread safe - parallel tests
 			// frequently show that multiple tests access the same containers.
 			// So only one thread can create a stack at a time
-			o.mu.Lock()
+			globalMutex.Lock()
 			network, octopusContainer, sqlServer, err := o.createDockerInfrastructure(t, ctx)
-			o.mu.Unlock()
+			globalMutex.Unlock()
 
 			// Attempt to clean up whatever resources were created.
 			// Don't return errors for the cleanup, just report them
 			defer func() {
-				o.mu.Lock()
-				defer o.mu.Unlock()
+				globalMutex.Lock()
+				defer globalMutex.Unlock()
 
 				stopTime := 1 * time.Minute
 
