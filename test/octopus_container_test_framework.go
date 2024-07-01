@@ -249,7 +249,6 @@ func ExtendWithFeatureflags(input map[string]string, t *testing.T) map[string]st
 		} else {
 			result[k] = v
 		}
-
 	}
 
 	return result
