@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -196,6 +197,9 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 			network,
 		},
 	}
+
+	req.Env = ExtendWithFeatureflags(req.Env, t)
+
 	t.Log("Creating Octopus container")
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
@@ -225,6 +229,30 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	uri := fmt.Sprintf("http://%s:%s", ip, mappedPort.Port())
 
 	return &OctopusContainer{Container: container, URI: uri}, nil
+}
+
+func ExtendWithFeatureflags(input map[string]string, t *testing.T) map[string]string {
+	result := make(map[string]string)
+	featureToggleRegex, _ := regexp.Compile("OCTOPUS__FeatureToggles__.*")
+	for _, item := range os.Environ() {
+		splitItems := strings.Split(item, "=")
+		if featureToggleRegex.MatchString(splitItems[0]) {
+			value := strings.Join(splitItems[1:], "")
+			result[splitItems[0]] = value
+		}
+	}
+
+	for k, v := range input {
+		_, exists := result[k]
+		if exists {
+			t.Error("")
+		} else {
+			result[k] = v
+		}
+
+	}
+
+	return result
 }
 
 // ArrangeTest is wrapper that initialises Octopus, runs a test, and cleans up the containers
