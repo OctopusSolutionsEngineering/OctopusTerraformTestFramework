@@ -238,6 +238,31 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	return &OctopusContainer{Container: container, URI: uri}, nil
 }
 
+// Pass through feature flags in the current environment to the environment used
+// to launch the OctopusDeploy container
+func ExtendWithFeatureflags(input map[string]string, t *testing.T) map[string]string {
+	result := make(map[string]string)
+	featureToggleRegex, _ := regexp.Compile("OCTOPUS__FeatureToggles__.*")
+	for _, item := range os.Environ() {
+		splitItems := strings.Split(item, "=")
+		if featureToggleRegex.MatchString(splitItems[0]) {
+			value := strings.Join(splitItems[1:], "")
+			result[splitItems[0]] = value
+		}
+	}
+
+	for k, v := range input {
+		_, exists := result[k]
+		if exists {
+			t.Error("")
+		} else {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
 // createDockerInfrastructure attemptes to create the complete Docker stack containing a
 // network, MSSQL container, and Octopus container. The return values include as much of
 // the partial stack as possible in the case of an error.
@@ -285,29 +310,6 @@ func (o *OctopusContainerTest) createDockerInfrastructure(t *testing.T, ctx cont
 	t.Log("Octopus Container Name: " + octoName)
 
 	return network, octopusContainer, sqlServer, nil
-}
-
-func ExtendWithFeatureflags(input map[string]string, t *testing.T) map[string]string {
-	result := make(map[string]string)
-	featureToggleRegex, _ := regexp.Compile("OCTOPUS__FeatureToggles__.*")
-	for _, item := range os.Environ() {
-		splitItems := strings.Split(item, "=")
-		if featureToggleRegex.MatchString(splitItems[0]) {
-			value := strings.Join(splitItems[1:], "")
-			result[splitItems[0]] = value
-		}
-	}
-
-	for k, v := range input {
-		_, exists := result[k]
-		if exists {
-			t.Error("")
-		} else {
-			result[k] = v
-		}
-	}
-
-	return result
 }
 
 // ArrangeTest is wrapper that initialises Octopus, runs a test, and cleans up the containers
