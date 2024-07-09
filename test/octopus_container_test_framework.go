@@ -15,6 +15,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -43,7 +44,7 @@ type OctopusContainer struct {
 	URI string
 }
 
-type mysqlContainer struct {
+type MysqlContainer struct {
 	testcontainers.Container
 	port string
 	ip   string
@@ -99,7 +100,7 @@ func (o *OctopusContainerTest) setupNetwork(ctx context.Context) (testcontainers
 }
 
 // setupDatabase creates a MSSQL container
-func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string) (*mysqlContainer, error) {
+func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string) (*MysqlContainer, error) {
 	req := testcontainers.ContainerRequest{
 		Name:         "mssql-" + uuid.New().String(),
 		Image:        "mcr.microsoft.com/mssql/server",
@@ -135,7 +136,7 @@ func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string
 		return nil, err
 	}
 
-	return &mysqlContainer{
+	return &MysqlContainer{
 		Container: container,
 		ip:        ip,
 		port:      mappedPort.Port(),
@@ -170,7 +171,7 @@ func (o *OctopusContainerTest) getRetryCount() uint {
 }
 
 // setupOctopus creates an Octopus container
-func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString string, network string, t *testing.T) (*OctopusContainer, error) {
+func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString string, network string) (*OctopusContainer, error) {
 	if os.Getenv("LICENSE") == "" {
 		return nil, errors.New("the LICENSE environment variable must be set to a base 64 encoded Octopus license key")
 	}
@@ -203,7 +204,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 			network,
 		},
 	}
-	t.Log("Creating Octopus container")
+	log.Println("Creating Octopus container")
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
@@ -212,7 +213,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	if err != nil {
 		return nil, err
 	}
-	t.Log("Finished creating Octopus container")
+	log.Println("Finished creating Octopus container")
 
 	// Display the container logs
 	if os.Getenv("OCTODISABLEOCTOCONTAINERLOGGING") != "true" {
@@ -237,7 +238,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 // createDockerInfrastructure attemptes to create the complete Docker stack containing a
 // network, MSSQL container, and Octopus container. The return values include as much of
 // the partial stack as possible in the case of an error.
-func (o *OctopusContainerTest) createDockerInfrastructure(t *testing.T, ctx context.Context) (testcontainers.Network, *OctopusContainer, *mysqlContainer, error) {
+func (o *OctopusContainerTest) createDockerInfrastructure(t *testing.T, ctx context.Context) (testcontainers.Network, *OctopusContainer, *MysqlContainer, error) {
 
 	network, networkName, err := o.setupNetwork(ctx)
 	if err != nil {
@@ -262,7 +263,7 @@ func (o *OctopusContainerTest) createDockerInfrastructure(t *testing.T, ctx cont
 	t.Log("SQL Server IP: " + sqlIp)
 	t.Log("SQL Server Container Name: " + sqlName)
 
-	octopusContainer, err := o.setupOctopus(ctx, "Server="+sqlIp+",1433;Database=OctopusDeploy;User=sa;Password=Password01!", networkName, t)
+	octopusContainer, err := o.setupOctopus(ctx, "Server="+sqlIp+",1433;Database=OctopusDeploy;User=sa;Password=Password01!", networkName)
 	if err != nil {
 		return network, octopusContainer, sqlServer, err
 	}
@@ -281,6 +282,120 @@ func (o *OctopusContainerTest) createDockerInfrastructure(t *testing.T, ctx cont
 	t.Log("Octopus Container Name: " + octoName)
 
 	return network, octopusContainer, sqlServer, nil
+}
+
+// ArrangeTestContainer is wrapper that initialises Octopus, and returns the container for future test runs
+func (o *OctopusContainerTest) ArrangeContainer(m *testing.M) (*OctopusContainer, *client.Client, *MysqlContainer, testcontainers.Network, error) {
+	var octopusContainer *OctopusContainer
+	var octoClient *client.Client
+	var network testcontainers.Network
+	var networkName string
+	var sqlServer *MysqlContainer
+
+	err := retry.Do(
+		func() error {
+			ctx := context.Background()
+
+			var err error
+			network, networkName, err = o.setupNetwork(ctx)
+			if err != nil {
+				return err
+			}
+
+			sqlServer, err = o.setupDatabase(ctx, networkName)
+			if err != nil {
+				return err
+			}
+
+			sqlIp, err := sqlServer.Container.ContainerIP(ctx)
+			if err != nil {
+				return err
+			}
+
+			sqlName, err := sqlServer.Container.Name(ctx)
+			if err != nil {
+				return err
+			}
+
+			log.Println("SQL Server IP: " + sqlIp)
+			log.Println("SQL Server Container Name: " + sqlName)
+
+			octopusContainer, err = o.setupOctopus(ctx, "Server="+sqlIp+",1433;Database=OctopusDeploy;User=sa;Password=Password01!", networkName)
+			if err != nil {
+				return err
+			}
+
+			octoIp, err := octopusContainer.Container.ContainerIP(ctx)
+			if err != nil {
+				return err
+			}
+
+			octoName, err := octopusContainer.Container.Name(ctx)
+			if err != nil {
+				return err
+			}
+
+			log.Println("Octopus IP: " + octoIp)
+			log.Println("Octopus Container Name: " + octoName)
+
+			// give the server 5 minutes to start up
+			err = lintwait.WaitForResource(func() error {
+				resp, err := http.Get(octopusContainer.URI + "/api")
+				if err != nil || resp.StatusCode != http.StatusOK {
+					return errors.New("the api endpoint was not available")
+				}
+				return nil
+			}, 5*time.Minute)
+
+			if err != nil {
+				return err
+			}
+
+			octoClient, err = octoclient.CreateClient(octopusContainer.URI, "", ApiKey)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		},
+		retry.Attempts(o.getRetryCount()),
+		retry.Delay(30*time.Second),
+	)
+
+	if err != nil {
+		log.Println(err.Error())
+		return nil, nil, nil, nil, err
+	}
+
+	return octopusContainer, octoClient, sqlServer, network, nil
+}
+
+// Clean up the container after the test is complete
+func (o *OctopusContainerTest) CleanUp(ctx context.Context, octoContainer *OctopusContainer, sqlServer *MysqlContainer, network testcontainers.Network) error {
+	// Stop the containers
+	stopTime := 1 * time.Minute
+	if octoStopErr := octoContainer.Stop(ctx, &stopTime); octoStopErr != nil {
+		log.Println("Failed to stop the Octopus container:", octoStopErr)
+	}
+
+	if sqlStopErr := sqlServer.Container.Stop(ctx, &stopTime); sqlStopErr != nil {
+		log.Println("Failed to stop the SQL Server container:", sqlStopErr)
+	}
+
+	// Terminate the containers
+	if octoTerminateErr := octoContainer.Terminate(ctx); octoTerminateErr != nil {
+		log.Printf("Failed to terminate the Octopus container: %v", octoTerminateErr)
+	}
+
+	if sqlTerminateErr := sqlServer.Container.Terminate(ctx); sqlTerminateErr != nil {
+		log.Printf("Failed to terminate the SQL Server container: %v", sqlTerminateErr)
+	}
+
+	if networkErr := network.Remove(ctx); networkErr != nil {
+		log.Printf("Failed to remove network: %v", networkErr)
+	}
+
+	return nil
 }
 
 // ArrangeTest is wrapper that initialises Octopus, runs a test, and cleans up the containers
