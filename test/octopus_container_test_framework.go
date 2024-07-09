@@ -393,7 +393,6 @@ func (o *OctopusContainerTest) CleanUp(ctx context.Context, octoContainer *Octop
 
 	if networkErr := network.Remove(ctx); networkErr != nil {
 		log.Printf("Failed to remove network: %v", networkErr)
-		return networkErr
 	}
 
 	return nil
