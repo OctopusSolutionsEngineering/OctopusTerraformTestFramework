@@ -469,7 +469,7 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 					networkErr := network.Remove(ctx)
 
 					if networkErr != nil {
-						t.Log("failed to remove network: %v", networkErr)
+						t.Logf("failed to remove network: %v", networkErr)
 					}
 				}
 			}()
