@@ -64,13 +64,6 @@ type OctopusContainerTest struct {
 	CustomEnvironment map[string]string
 }
 
-func NewOctopusContainerTest(OctopusVersion string, CustomEnvironment map[string]string) OctopusContainerTest {
-	return OctopusContainerTest{
-		OctopusVersion:    OctopusVersion,
-		CustomEnvironment: CustomEnvironment,
-	}
-}
-
 func (o *OctopusContainerTest) enableContainerLogging(container testcontainers.Container, ctx context.Context) error {
 	// Display the container logs
 	err := container.StartLogProducer(ctx)
