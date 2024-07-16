@@ -20,7 +20,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -61,6 +60,15 @@ func (g *TestLogConsumer) Accept(l testcontainers.Log) {
 var globalMutex = sync.Mutex{}
 
 type OctopusContainerTest struct {
+	OctopusVersion    string
+	CustomEnvironment map[string]string
+}
+
+func NewOctopusContainerTest(OctopusVersion string, CustomEnvironment map[string]string) OctopusContainerTest {
+	return OctopusContainerTest{
+		OctopusVersion:    OctopusVersion,
+		CustomEnvironment: CustomEnvironment,
+	}
 }
 
 func (o *OctopusContainerTest) enableContainerLogging(container testcontainers.Container, ctx context.Context) error {
@@ -154,6 +162,9 @@ func (o *OctopusContainerTest) getOctopusImageUrl() string {
 }
 
 func (o *OctopusContainerTest) getOctopusVersion() string {
+	if o.OctopusVersion != "" {
+		return o.OctopusVersion
+	}
 	overrideOctoTag := os.Getenv("OCTOTESTVERSION")
 	if overrideOctoTag != "" {
 		return overrideOctoTag
@@ -206,7 +217,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		},
 	}
 
-	req.Env = ExtendWithFeatureflags(req.Env, t)
+	req.Env = o.AddCustomEnvironment(req.Env)
 
 	log.Println("Creating Octopus container")
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
@@ -241,21 +252,18 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 
 // Pass through feature flags in the current environment to the environment used
 // to launch the OctopusDeploy container
-func ExtendWithFeatureflags(input map[string]string, t *testing.T) map[string]string {
+func (o *OctopusContainerTest) AddCustomEnvironment(input map[string]string) map[string]string {
 	result := make(map[string]string)
-	featureToggleRegex, _ := regexp.Compile("OCTOPUS__FeatureToggles__.*")
-	for _, item := range os.Environ() {
-		splitItems := strings.Split(item, "=")
-		if featureToggleRegex.MatchString(splitItems[0]) {
-			value := strings.Join(splitItems[1:], "")
-			result[splitItems[0]] = value
-		}
-	}
 
 	for k, v := range input {
-		value, exists := result[k]
+		result[k] = v
+	}
+
+	for k, v := range o.CustomEnvironment {
+		//checking against the input, as `result` is growing on each iteration
+		value, exists := input[k]
 		if exists {
-			t.Error(k + " already exists in OctopusServer's environment as '" + value + "', and will not be replaced")
+			log.Println(k + " already exists in OctopusServer's environment as '" + value + "', and will not be replaced")
 		} else {
 			result[k] = v
 		}
@@ -264,7 +272,7 @@ func ExtendWithFeatureflags(input map[string]string, t *testing.T) map[string]st
 	return result
 }
 
-// createDockerInfrastructure attemptes to create the complete Docker stack containing a
+// createDockerInfrastructure attempts to create the complete Docker stack containing a
 // network, MSSQL container, and Octopus container. The return values include as much of
 // the partial stack as possible in the case of an error.
 func (o *OctopusContainerTest) createDockerInfrastructure(t *testing.T, ctx context.Context) (testcontainers.Network, *OctopusContainer, *MysqlContainer, error) {
