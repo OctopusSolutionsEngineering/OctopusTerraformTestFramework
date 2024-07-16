@@ -1,4 +1,4 @@
-name: OctopusDeployTerraformTestFramework
+name: OctopusTerraformTestFramework
 
 on: [push]
 
