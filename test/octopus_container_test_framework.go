@@ -60,7 +60,6 @@ func (g *TestLogConsumer) Accept(l testcontainers.Log) {
 var globalMutex = sync.Mutex{}
 
 type OctopusContainerTest struct {
-	OctopusVersion    string
 	CustomEnvironment map[string]string
 }
 
@@ -155,9 +154,6 @@ func (o *OctopusContainerTest) getOctopusImageUrl() string {
 }
 
 func (o *OctopusContainerTest) getOctopusVersion() string {
-	if o.OctopusVersion != "" {
-		return o.OctopusVersion
-	}
 	overrideOctoTag := os.Getenv("OCTOTESTVERSION")
 	if overrideOctoTag != "" {
 		return overrideOctoTag
@@ -209,7 +205,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 			network,
 		},
 	}
-	
+
 	req.Env = o.AddCustomEnvironment(req.Env)
 
 	log.Println("Creating Octopus container")

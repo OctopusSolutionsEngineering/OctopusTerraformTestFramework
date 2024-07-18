@@ -44,14 +44,3 @@ func TestContainerWithNoSpecifiedVersionWillUseLatest(t *testing.T) {
 		t.Errorf("The OctopusServer version is %v", version)
 	}
 }
-
-func TestContainerVersionCanBeOverridenAtConstruction(t *testing.T) {
-	sut := OctopusContainerTest{}
-	sut.OctopusVersion = "ArbitraryVersion"
-
-	version := sut.getOctopusVersion()
-
-	if version != "ArbitraryVersion" {
-		t.Errorf("The OctopusServer version is %v", version)
-	}
-}
