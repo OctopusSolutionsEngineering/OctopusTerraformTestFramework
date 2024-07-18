@@ -35,6 +35,22 @@ func TestCustomEnvironmentVariablesCannotOverrideImplicitValues(t *testing.T) {
 	}
 }
 
+func TestCustomEnvironmentVariablesAreAddedToEnvironment(t *testing.T) {
+
+	sut := OctopusContainerTest{}
+	sut.CustomEnvironment = make(map[string]string)
+
+	containerEnv := make(map[string]string)
+	containerEnv["1"] = "first"
+	containerEnv["2"] = "second"
+
+	fullEnv := sut.AddCustomEnvironment(containerEnv)
+
+	if fullEnv["1"] != "first" || fullEnv["2"] != "second" {
+		t.Error("The original environment was illegally modified")
+	}
+}
+
 func TestContainerWithNoSpecifiedVersionWillUseLatest(t *testing.T) {
 	sut := OctopusContainerTest{}
 
