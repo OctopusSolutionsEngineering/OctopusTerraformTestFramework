@@ -60,6 +60,7 @@ func (g *TestLogConsumer) Accept(l testcontainers.Log) {
 var globalMutex = sync.Mutex{}
 
 type OctopusContainerTest struct {
+	CustomEnvironment map[string]string
 }
 
 func (o *OctopusContainerTest) enableContainerLogging(container testcontainers.Container, ctx context.Context) error {
@@ -204,6 +205,9 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 			network,
 		},
 	}
+
+	req.Env = o.AddCustomEnvironment(req.Env)
+
 	log.Println("Creating Octopus container")
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
@@ -235,7 +239,29 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	return &OctopusContainer{Container: container, URI: uri}, nil
 }
 
-// createDockerInfrastructure attemptes to create the complete Docker stack containing a
+// Pass through feature flags in the current environment to the environment used
+// to launch the OctopusDeploy container
+func (o *OctopusContainerTest) AddCustomEnvironment(input map[string]string) map[string]string {
+	result := make(map[string]string)
+
+	for k, v := range input {
+		result[k] = v
+	}
+
+	for k, v := range o.CustomEnvironment {
+		//checking against the input, as `result` is growing on each iteration
+		value, exists := input[k]
+		if exists {
+			log.Println(k + " already exists in OctopusServer's environment as '" + value + "', and will not be replaced")
+		} else {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
+// createDockerInfrastructure attempts to create the complete Docker stack containing a
 // network, MSSQL container, and Octopus container. The return values include as much of
 // the partial stack as possible in the case of an error.
 func (o *OctopusContainerTest) createDockerInfrastructure(t *testing.T, ctx context.Context) (testcontainers.Network, *OctopusContainer, *MysqlContainer, error) {
@@ -469,7 +495,7 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 					networkErr := network.Remove(ctx)
 
 					if networkErr != nil {
-						t.Log("failed to remove network: %v", networkErr)
+						t.Logf("failed to remove network: %v", networkErr)
 					}
 				}
 			}()
