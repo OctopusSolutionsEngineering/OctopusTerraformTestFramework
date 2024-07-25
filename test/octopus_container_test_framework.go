@@ -110,7 +110,7 @@ func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string
 			"ACCEPT_EULA": "Y",
 			"SA_PASSWORD": "Password01!",
 		},
-		WaitingFor: wait.ForExec([]string{"/opt/mssql-tools18/bin/sqlcmd", "-C", "-U", "sa", "-P", "Password01!", "-Q", "select 1"}).WithExitCodeMatcher(
+		WaitingFor: wait.ForExec([]string{"/opt/mssql-tools/bin/sqlcmd", "-C", "-U", "sa", "-P", "Password01!", "-Q", "select 1"}).WithExitCodeMatcher(
 			func(exitCode int) bool {
 				return exitCode == 0
 			}),
