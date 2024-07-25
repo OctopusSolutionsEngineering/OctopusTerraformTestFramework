@@ -104,7 +104,7 @@ func (o *OctopusContainerTest) setupNetwork(ctx context.Context) (testcontainers
 func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string) (*MysqlContainer, error) {
 	req := testcontainers.ContainerRequest{
 		Name:         "mssql-" + uuid.New().String(),
-		Image:        "mcr.microsoft.com/mssql/server",
+		Image:        "mcr.microsoft.com/mssql/server" + o.getMSSQLTaggedVersion(),
 		ExposedPorts: []string{"1433/tcp"},
 		Env: map[string]string{
 			"ACCEPT_EULA": "Y",
@@ -142,6 +142,15 @@ func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string
 		ip:        ip,
 		port:      mappedPort.Port(),
 	}, nil
+}
+
+func (o *OctopusContainerTest) getMSSQLTaggedVersion() string {
+	overrideMSSQLOctoTag := os.Getenv("OCTO_MSSQLTAG")
+	if overrideMSSQLOctoTag != "" {
+		return ":" + overrideMSSQLOctoTag
+	}
+
+	return ""
 }
 
 func (o *OctopusContainerTest) getOctopusImageUrl() string {
@@ -323,23 +332,28 @@ func (o *OctopusContainerTest) ArrangeContainer(m *testing.M) (*OctopusContainer
 			ctx := context.Background()
 
 			var err error
+			log.Print("Setting up network")
 			network, networkName, err = o.setupNetwork(ctx)
 			if err != nil {
+				log.Print("Failed to setup network container")
 				return err
 			}
 
 			sqlServer, err = o.setupDatabase(ctx, networkName)
 			if err != nil {
+				log.Print("Failed to setup mssql database container")
 				return err
 			}
 
 			sqlIp, err := sqlServer.Container.ContainerIP(ctx)
 			if err != nil {
+				log.Print("Failed to setup container IP container")
 				return err
 			}
 
 			sqlName, err := sqlServer.Container.Name(ctx)
 			if err != nil {
+				log.Print("Failed to get sql container name")
 				return err
 			}
 
@@ -348,16 +362,19 @@ func (o *OctopusContainerTest) ArrangeContainer(m *testing.M) (*OctopusContainer
 
 			octopusContainer, err = o.setupOctopus(ctx, "Server="+sqlIp+",1433;Database=OctopusDeploy;User=sa;Password=Password01!", networkName)
 			if err != nil {
+				log.Print("Failed to setup octopus container")
 				return err
 			}
 
 			octoIp, err := octopusContainer.Container.ContainerIP(ctx)
 			if err != nil {
+				log.Print("Failed to get octopus container IP")
 				return err
 			}
 
 			octoName, err := octopusContainer.Container.Name(ctx)
 			if err != nil {
+				log.Print("Failed to get octopus container Name")
 				return err
 			}
 
