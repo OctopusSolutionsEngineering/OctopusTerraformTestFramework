@@ -190,6 +190,11 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		return nil, errors.New("the LICENSE environment variable must be set to a base 64 encoded Octopus license key")
 	}
 
+	disableDind := os.Getenv("OCTODISABLEDIND")
+	if disableDind == "" {
+		disableDind = "Y"
+	}
+
 	req := testcontainers.ContainerRequest{
 		Name:         "octopus-" + uuid.New().String(),
 		Image:        o.getOctopusImageUrl() + ":" + o.getOctopusVersion(),
@@ -201,14 +206,14 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 			"CONNSTRING":                    connString,
 			"CREATE_DB":                     "Y",
 			"ADMIN_API_KEY":                 ApiKey,
-			"DISABLE_DIND":                  "Y",
+			"DISABLE_DIND":                  disableDind,
 			"ADMIN_USERNAME":                "admin",
 			"ADMIN_PASSWORD":                "Password01!",
 			"OCTOPUS_SERVER_BASE64_LICENSE": os.Getenv("LICENSE"),
 			"LICENSE_BASE64":                os.Getenv("LICENSE"),
 			"ENABLE_USAGE":                  "N",
 		},
-		Privileged: false,
+		Privileged: disableDind != "Y",
 		WaitingFor: wait.ForLog("Listening for HTTP requests on").WithStartupTimeout(30 * time.Minute),
 		Networks: []string{
 			network,
