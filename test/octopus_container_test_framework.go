@@ -325,7 +325,7 @@ func (o *OctopusContainerTest) createDockerInfrastructure(t *testing.T, ctx cont
 }
 
 // ArrangeTestContainer is wrapper that initialises Octopus, and returns the container for future test runs
-func (o *OctopusContainerTest) ArrangeContainer(m *testing.M) (*OctopusContainer, *client.Client, *MysqlContainer, testcontainers.Network, error) {
+func (o *OctopusContainerTest) ArrangeContainer() (*OctopusContainer, *client.Client, *MysqlContainer, testcontainers.Network, error) {
 	var octopusContainer *OctopusContainer
 	var octoClient *client.Client
 	var network testcontainers.Network
