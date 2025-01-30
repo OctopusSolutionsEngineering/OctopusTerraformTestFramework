@@ -324,7 +324,7 @@ func (o *OctopusContainerTest) createDockerInfrastructure(t *testing.T, ctx cont
 	return network, octopusContainer, sqlServer, nil
 }
 
-// ArrangeTestContainer is wrapper that initialises Octopus, and returns the container for future test runs
+// ArrangeContainer is wrapper that initialises Octopus, and returns the container for future test runs
 func (o *OctopusContainerTest) ArrangeContainer() (*OctopusContainer, *client.Client, *MysqlContainer, testcontainers.Network, error) {
 	var octopusContainer *OctopusContainer
 	var octoClient *client.Client
@@ -418,7 +418,7 @@ func (o *OctopusContainerTest) ArrangeContainer() (*OctopusContainer, *client.Cl
 	return octopusContainer, octoClient, sqlServer, network, nil
 }
 
-// Clean up the container after the test is complete
+// CleanUp stops the containers after the test is complete
 func (o *OctopusContainerTest) CleanUp(ctx context.Context, octoContainer *OctopusContainer, sqlServer *MysqlContainer, network testcontainers.Network) error {
 	// Stop the containers
 	stopTime := 1 * time.Minute
