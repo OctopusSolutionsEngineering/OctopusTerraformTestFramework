@@ -195,6 +195,11 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		disableDind = "Y"
 	}
 
+	apiKey := os.Getenv("OCTOTESTAPIKEY")
+	if apiKey == "" {
+		apiKey = ApiKey
+	}
+
 	req := testcontainers.ContainerRequest{
 		Name:         "octopus-" + uuid.New().String(),
 		Image:        o.getOctopusImageUrl() + ":" + o.getOctopusVersion(),
