@@ -195,11 +195,6 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		disableDind = "Y"
 	}
 
-	apiKey := os.Getenv("OCTOTESTAPIKEY")
-	if apiKey == "" {
-		apiKey = ApiKey
-	}
-
 	req := testcontainers.ContainerRequest{
 		Name:         "octopus-" + uuid.New().String(),
 		Image:        o.getOctopusImageUrl() + ":" + o.getOctopusVersion(),
@@ -210,7 +205,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 			// CONNSTRING, LICENSE_BASE64, and CREATE_DB are used by the octopusdeploy/linux image
 			"CONNSTRING":                    connString,
 			"CREATE_DB":                     "Y",
-			"ADMIN_API_KEY":                 ApiKey,
+			"ADMIN_API_KEY":                 getApiKey(),
 			"DISABLE_DIND":                  disableDind,
 			"ADMIN_USERNAME":                "admin",
 			"ADMIN_PASSWORD":                "Password01!",
@@ -256,6 +251,14 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	uri := fmt.Sprintf("http://%s:%s", ip, mappedPort.Port())
 
 	return &OctopusContainer{Container: container, URI: uri}, nil
+}
+
+func getApiKey() string {
+	apiKey := os.Getenv("OCTOTESTAPIKEY")
+	if apiKey == "" {
+		return ApiKey
+	}
+	return apiKey
 }
 
 // Pass through feature flags in the current environment to the environment used
@@ -404,7 +407,7 @@ func (o *OctopusContainerTest) ArrangeContainer() (*OctopusContainer, *client.Cl
 				return err
 			}
 
-			octoClient, err = octoclient.CreateClient(octopusContainer.URI, "", ApiKey)
+			octoClient, err = octoclient.CreateClient(octopusContainer.URI, "", getApiKey())
 			if err != nil {
 				return err
 			}
@@ -546,7 +549,7 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 				return err
 			}
 
-			client, err := octoclient.CreateClient(octopusContainer.URI, "", ApiKey)
+			client, err := octoclient.CreateClient(octopusContainer.URI, "", getApiKey())
 			if err != nil {
 				return err
 			}
@@ -632,7 +635,7 @@ func (o *OctopusContainerTest) TerraformApply(t *testing.T, terraformProjectDir 
 		"-auto-approve",
 		"-no-color",
 		"-var=octopus_server=" + server,
-		"-var=octopus_apikey=" + ApiKey,
+		"-var=octopus_apikey=" + getApiKey(),
 		"-var=octopus_space_id=" + spaceId,
 	}, vars...)
 
