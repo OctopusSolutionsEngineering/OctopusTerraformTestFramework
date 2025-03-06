@@ -200,8 +200,9 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		Image:        o.getOctopusImageUrl() + ":" + o.getOctopusVersion(),
 		ExposedPorts: []string{"8080/tcp"},
 		Env: map[string]string{
-			"ACCEPT_EULA":                   "Y",
-			"DB_CONNECTION_STRING":          connString,
+			"ACCEPT_EULA":          "Y",
+			"DB_CONNECTION_STRING": connString,
+			// CONNSTRING, LICENSE_BASE64, and CREATE_DB are used by the octopusdeploy/linux image
 			"CONNSTRING":                    connString,
 			"CREATE_DB":                     "Y",
 			"ADMIN_API_KEY":                 getApiKey(),
@@ -211,24 +212,11 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 			"OCTOPUS_SERVER_BASE64_LICENSE": os.Getenv("LICENSE"),
 			"LICENSE_BASE64":                os.Getenv("LICENSE"),
 			"ENABLE_USAGE":                  "N",
-			"PATH":                          "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
 		},
 		Privileged: disableDind != "Y",
 		WaitingFor: wait.ForLog("Listening for HTTP requests on").WithStartupTimeout(30 * time.Minute),
 		Networks: []string{
 			network,
-		},
-		// Instead of using Cmd for installation, use an EntryPoint script
-		Entrypoint: []string{
-			"/bin/bash",
-			"-c",
-			"apt-get update && apt-get install -y curl gnupg lsb-release && " +
-				"curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && " +
-				"echo \"deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main\" | tee /etc/apt/sources.list.d/hashicorp.list > /dev/null && " +
-				"apt-get update && apt-get install -y terraform && " +
-				"which terraform && " + // Verify where terraform is installed
-				"terraform --version && " + // Verify terraform is working
-				"./install.sh",
 		},
 	}
 
@@ -244,6 +232,20 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		return nil, err
 	}
 	log.Println("Finished creating Octopus container")
+	installCmd := []string{
+		"/bin/bash",
+		"-c",
+		"apt-get update && apt-get install -y curl gnupg lsb-release && " +
+			"curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && " +
+			"echo \"deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main\" | tee /etc/apt/sources.list.d/hashicorp.list > /dev/null && " +
+			"apt-get update && apt-get install -y terraform && " +
+			"which terraform && terraform --version",
+	}
+	exitCode, output, err := container.Exec(ctx, installCmd)
+	if err != nil || exitCode != 0 {
+		log.Printf("%s", output)
+		return nil, err
+	}
 
 	// Display the container logs
 	if os.Getenv("OCTODISABLEOCTOCONTAINERLOGGING") != "true" {
