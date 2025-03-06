@@ -221,11 +221,10 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		Entrypoint: []string{"/bin/sh"},
 		Cmd: []string{
 			"-c",
-			"apt-get update && apt-get install -y curl gnupg lsb-release && " +
-				"curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && " +
-				"echo \"deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main\" | tee /etc/apt/sources.list.d/hashicorp.list > /dev/null && " +
-				"apt-get update && apt-get install -y terraform && " +
-				"./install.sh",
+			"wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg;",
+			"echo \"deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main\" | sudo tee /etc/apt/sources.list.d/hashicorp.list;",
+			"sudo apt update && sudo apt install terraform;",
+			"./install.sh",
 		},
 	}
 
