@@ -218,7 +218,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		Networks: []string{
 			network,
 		},
-		Entrypoint: []string{"/bin/bash"},
+		Entrypoint: []string{"/bin/sh"},
 		Cmd: []string{
 			"-c",
 			"apt-get update && apt-get install -y curl gnupg lsb-release && " +
