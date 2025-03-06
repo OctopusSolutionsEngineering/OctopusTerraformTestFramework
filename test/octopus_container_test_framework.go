@@ -228,7 +228,7 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 				"apt-get update && apt-get install -y terraform && " +
 				"which terraform && " + // Verify where terraform is installed
 				"terraform --version && " + // Verify terraform is working
-				"/usr/local/bin/octopus.server.sh", // Start the Octopus server process
+				"./install.sh",
 		},
 	}
 
