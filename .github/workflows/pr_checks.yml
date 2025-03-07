@@ -12,6 +12,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.21.x'
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.11.1"
       - name: Install dependencies
         run: go get ./...
       - name: Build
