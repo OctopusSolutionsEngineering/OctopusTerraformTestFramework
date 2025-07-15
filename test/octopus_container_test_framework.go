@@ -20,6 +20,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -221,6 +222,11 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	}
 
 	req.Env = o.AddCustomEnvironment(req.Env)
+
+	// We do not support a server arm image at this stage, try and use amd instead.
+	if runtime.GOARCH == "arm64" {
+		req.ImagePlatform = "linux/amd64"
+	}
 
 	log.Println("Creating Octopus container")
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
