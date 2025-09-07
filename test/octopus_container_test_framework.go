@@ -6,15 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/OctopusDeploy/go-octopusdeploy/v2/pkg/client"
-	"github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/octoclient"
-	lintwait "github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/wait"
-	"github.com/avast/retry-go/v4"
-	"github.com/google/uuid"
-	cp "github.com/otiai10/copy"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
-	orderedmap "github.com/wk8/go-ordered-map/v2"
 	"log"
 	"net/http"
 	"os"
@@ -26,6 +17,16 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/OctopusDeploy/go-octopusdeploy/v2/pkg/client"
+	"github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/octoclient"
+	lintwait "github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/wait"
+	"github.com/avast/retry-go/v4"
+	"github.com/google/uuid"
+	cp "github.com/otiai10/copy"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 /*
@@ -124,6 +125,12 @@ func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string
 		Started:          true,
 		Reuse:            false,
 	})
+
+	// Display the container logs
+	if os.Getenv("OCTODISABLEMSSQLCONTAINERLOGGING") != "true" {
+		o.enableContainerLogging(container, ctx)
+	}
+
 	if err != nil {
 		return nil, err
 	}
