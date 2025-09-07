@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.8
 
 require (
-	github.com/OctopusDeploy/go-octopusdeploy/v2 v2.78.0
+	github.com/OctopusDeploy/go-octopusdeploy/v2 v2.80.1
 	github.com/avast/retry-go/v4 v4.6.1
 	github.com/google/uuid v1.6.0
 	github.com/otiai10/copy v1.14.1

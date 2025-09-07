@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -132,6 +133,13 @@ func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string
 	}
 
 	if err != nil {
+		logs, logErr := container.Logs(ctx)
+		if logErr == nil {
+			b, readErr := io.ReadAll(logs)
+			if readErr == nil {
+				log.Println(string(b))
+			}
+		}
 		return nil, err
 	}
 
@@ -242,6 +250,13 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 		Reuse:            false,
 	})
 	if err != nil {
+		logs, logErr := container.Logs(ctx)
+		if logErr == nil {
+			b, readErr := io.ReadAll(logs)
+			if readErr == nil {
+				log.Println(string(b))
+			}
+		}
 		return nil, err
 	}
 	log.Println("Finished creating Octopus container")
