@@ -595,7 +595,7 @@ func (o *OctopusContainerTest) ArrangeTest(t *testing.T, testFunc func(t *testin
 	)
 
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 }
 
@@ -906,7 +906,7 @@ func (o *OctopusContainerTest) Act(t *testing.T, container *OctopusContainer, te
 	defer func() {
 		err := os.RemoveAll(dir)
 		if err != nil {
-			t.Fatalf(err.Error())
+			t.Fatal(err.Error())
 		}
 	}()
 

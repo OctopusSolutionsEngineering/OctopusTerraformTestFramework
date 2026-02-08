@@ -1,15 +1,15 @@
 module github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.23.8
+toolchain go1.24.13
 
 require (
 	github.com/OctopusDeploy/go-octopusdeploy/v2 v2.80.1
 	github.com/avast/retry-go/v4 v4.6.1
 	github.com/google/uuid v1.6.0
 	github.com/otiai10/copy v1.14.1
-	github.com/testcontainers/testcontainers-go v0.38.0
+	github.com/testcontainers/testcontainers-go v0.40.0
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 )
 
@@ -29,7 +29,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dghubble/sling v1.4.2 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/docker v28.3.3+incompatible // indirect
+	github.com/docker/docker v28.5.1+incompatible // indirect
 	github.com/docker/go-connections v0.6.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/ebitengine/purego v0.8.4 // indirect
@@ -76,12 +76,12 @@ require (
 	go.opentelemetry.io/otel/metric v1.37.0 // indirect
 	go.opentelemetry.io/otel/trace v1.37.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
+	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/exp v0.0.0-20250711185948-6ae5c78190dc // indirect
-	golang.org/x/net v0.42.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/net v0.45.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

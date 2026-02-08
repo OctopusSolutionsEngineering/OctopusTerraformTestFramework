@@ -24,4 +24,5 @@ jobs:
         run: go test ./...
         env:
           LICENSE: ${{ secrets.LICENSE }}
+          OCTO_MSSQLTAG: 2022-latest
 
