@@ -1,4 +1,4 @@
-module github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework
+module github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/v2
 
 go 1.25.0
 
