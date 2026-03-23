@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"github.com/OctopusDeploy/go-octopusdeploy/v2/pkg/client"
-	"github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/octoclient"
-	lintwait "github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/wait"
+	"github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/v2/octoclient"
+	lintwait "github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/v2/wait"
 	"github.com/avast/retry-go/v4"
 	"github.com/google/uuid"
 	cp "github.com/otiai10/copy"

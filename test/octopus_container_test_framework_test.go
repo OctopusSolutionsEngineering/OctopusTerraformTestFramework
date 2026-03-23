@@ -1,11 +1,12 @@
 package test
 
 import (
-	"github.com/OctopusDeploy/go-octopusdeploy/v2/pkg/client"
-	"github.com/OctopusDeploy/go-octopusdeploy/v2/pkg/environments"
-	"github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/octoclient"
 	"path/filepath"
 	"testing"
+
+	"github.com/OctopusDeploy/go-octopusdeploy/v2/pkg/client"
+	"github.com/OctopusDeploy/go-octopusdeploy/v2/pkg/environments"
+	"github.com/OctopusSolutionsEngineering/OctopusTerraformTestFramework/v2/octoclient"
 )
 
 func TestCustomEnvironmentVariablesCanBeNil(t *testing.T) {
