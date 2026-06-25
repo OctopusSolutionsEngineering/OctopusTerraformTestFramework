@@ -49,3 +49,20 @@ An example of this directory has been provided at [1-singlespace](terraform%2F1-
 * `OCTODISABLEOCTOCONTAINERLOGGING` - set to true to skip logging output from the Octopus container.
 * `LICENSE` - Set to the base 64 encoded version of an Octopus XML license. See `Octopus Dev License` in 1Password for a value.
 * `ENABLE_USAGE` - set to `N` to stop Octopus from sending telemetry.
+
+## MacOs Troubleshooting
+
+If the MSSQL image seg faults or containers do not appear to start in Docker Desktop, you may need to override the the `DOCKER_HOST` environment variable.
+
+Run `docker context ls` to find the Docker Desktop docker file:
+
+```shell
+% docker context ls
+
+NAME              DESCRIPTION                               DOCKER ENDPOINT                                                                                  ERROR
+default           Current DOCKER_HOST based configuration   unix:///var/run/docker.sock
+desktop-linux *   Docker Desktop                            unix:///Users/matthewcasperson/.docker/run/docker.sock
+podman            Podman                                    unix:///var/folders/d2/0y02y4ld21g4kx5fvw1lk52h0000gn/T/podman/podman-machine-default-api.sock
+```
+
+In the example above, `DOCKER_HOST` must be set to `unix:///Users/matthewcasperson/.docker/run/docker.sock`.
