@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -106,9 +105,10 @@ func (o *OctopusContainerTest) setupNetwork(ctx context.Context) (testcontainers
 // setupDatabase creates a MSSQL container
 func (o *OctopusContainerTest) setupDatabase(ctx context.Context, network string) (*MysqlContainer, error) {
 	req := testcontainers.ContainerRequest{
-		Name:         "mssql-" + uuid.New().String(),
-		Image:        "mcr.microsoft.com/mssql/server" + o.getMSSQLTaggedVersion(),
-		ExposedPorts: []string{"1433/tcp"},
+		Name:          "mssql-" + uuid.New().String(),
+		Image:         "mcr.microsoft.com/mssql/server" + o.getMSSQLTaggedVersion(),
+		ExposedPorts:  []string{"1433/tcp"},
+		ImagePlatform: "linux/amd64",
 		Env: map[string]string{
 			"ACCEPT_EULA": "Y",
 			"SA_PASSWORD": "Password01!",
@@ -212,9 +212,10 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	}
 
 	req := testcontainers.ContainerRequest{
-		Name:         "octopus-" + uuid.New().String(),
-		Image:        o.getOctopusImageUrl() + ":" + o.getOctopusVersion(),
-		ExposedPorts: []string{"8080/tcp"},
+		Name:          "octopus-" + uuid.New().String(),
+		Image:         o.getOctopusImageUrl() + ":" + o.getOctopusVersion(),
+		ImagePlatform: "linux/amd64",
+		ExposedPorts:  []string{"8080/tcp"},
 		Env: map[string]string{
 			"ACCEPT_EULA":          "Y",
 			"DB_CONNECTION_STRING": connString,
@@ -237,11 +238,6 @@ func (o *OctopusContainerTest) setupOctopus(ctx context.Context, connString stri
 	}
 
 	req.Env = o.AddCustomEnvironment(req.Env)
-
-	// We do not support a server arm image at this stage, try and use amd instead.
-	if runtime.GOARCH == "arm64" {
-		req.ImagePlatform = "linux/amd64"
-	}
 
 	log.Println("Creating Octopus container")
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
